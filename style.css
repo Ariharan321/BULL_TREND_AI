@@ -22,7 +22,7 @@ body {
     color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
-    background: url('dashboard-bg.png') no-repeat center center/cover fixed;
+    background: url('dashboard-bg.png') no-repeat center center/100% 100% fixed;
 }
 
 .glass-panel {
