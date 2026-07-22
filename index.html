@@ -30,9 +30,17 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                     Alerts
                 </a>
-                <a href="#" class="nav-item ai-glow" data-target="view-predict">
+                <a href="#" class="nav-item" data-target="view-predict">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path><path d="M16 12L12 8l-4 4"></path></svg>
                     AI Predict
+                </a>
+                <a href="#" class="nav-item" data-target="view-insights">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Market Insights
+                </a>
+                <a href="#" class="nav-item" data-target="view-indices">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    Global Markets
                 </a>
             </nav>
             
@@ -162,6 +170,11 @@
                     </div>
                     <p class="subtitle">Run advanced pattern recognition and momentum analysis for <span class="highlight" id="ai-ticker-name">RELIANCE</span></p>
                     
+                    <div class="predict-stock-info">
+                        <span id="ai-stock-name" class="predict-stock-name">--</span>
+                        <span id="ai-stock-ticker" class="ticker">--</span>
+                    </div>
+                    
                     <div class="predict-actions">
                         <button id="run-ai-btn" class="btn-primary" style="font-size: 1.1rem; padding: 12px 24px;">
                             Run Analysis Now
@@ -188,8 +201,125 @@
                         </div>
                         
                         <div class="final-verdict">
-                            <h3>AI Consensus: <span id="ai-verdict" class="highlight">BULLISH</span></h3>
-                            <p>Projected 24H Target: <strong id="ai-target">₹ --</strong></p>
+                            <div class="verdict-grid">
+                                <div class="verdict-item">
+                                    <span class="verdict-label">Tomorrow's Trend</span>
+                                    <div class="verdict-val">
+                                        <span id="ai-verdict" class="verdict-direction">--</span>
+                                    </div>
+                                </div>
+                                <div class="verdict-item">
+                                    <span class="verdict-label">Projected 24H Target</span>
+                                    <div class="verdict-val">
+                                        <strong id="ai-target">₹ --</strong>
+                                        <span id="ai-expected-change" class="expected-change">--%</span>
+                                    </div>
+                                </div>
+                                <div class="verdict-item">
+                                    <span class="verdict-label">AI Confidence Score</span>
+                                    <div class="verdict-val">
+                                        <div class="confidence-container">
+                                            <span id="ai-confidence-score" class="confidence-num">--%</span>
+                                            <div class="confidence-bar"><div class="confidence-fill" id="ai-confidence-fill"></div></div>
+                                        </div>
+                                        <span id="ai-confidence-badge" class="confidence-badge">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Market Insights View -->
+            <div id="view-insights" class="view-section">
+                <div class="insights-container">
+                    <div class="insights-grid">
+                        <!-- Top 10 Growing -->
+                        <div class="card insights-card glass-panel">
+                            <div class="insights-card-header">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                <h3>Top 10 Growing Stocks</h3>
+                            </div>
+                            <div id="growing-stocks-list" class="movers-list">
+                                <div class="loader-small"></div>
+                            </div>
+                        </div>
+
+                        <!-- Top 10 Falling -->
+                        <div class="card insights-card glass-panel">
+                            <div class="insights-card-header">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                                <h3>Top 10 Falling Stocks</h3>
+                            </div>
+                            <div id="falling-stocks-list" class="movers-list">
+                                <div class="loader-small"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trending Industries -->
+                    <div class="card industries-card glass-panel">
+                        <div class="insights-card-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                            <h3>Top Trending Industries</h3>
+                        </div>
+                        <div id="trending-industries-list" class="industries-list">
+                            <div class="loader-small"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Global Markets View -->
+            <div id="view-indices" class="view-section">
+                <div class="insights-container">
+                    <!-- World Indices Grid -->
+                    <div class="card glass-panel">
+                        <div class="insights-card-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <h3>World Stock Indices</h3>
+                        </div>
+                        <div id="global-indices-grid" class="indices-list-grid">
+                            <div class="loader-small"></div>
+                        </div>
+                    </div>
+
+                    <!-- Index Breakdown -->
+                    <div id="index-breakdown-card" class="card glass-panel hidden">
+                        <div class="insights-card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span id="breakdown-country-flag" style="font-size: 1.8rem;">🇮🇳</span>
+                                <div>
+                                    <h3 id="breakdown-index-name" style="margin-bottom: 2px;">Nifty 50 Companies</h3>
+                                    <span id="breakdown-index-symbol" class="ticker">^NSEI</span>
+                                </div>
+                            </div>
+                            <div id="breakdown-index-performance" style="font-size: 1.15rem; font-weight: 700; padding: 6px 12px; border-radius: 8px;">--%</div>
+                        </div>
+
+                        <div class="insights-grid" style="margin-top: 10px;">
+                            <!-- Top Gainers -->
+                            <div style="display: flex; flex-direction: column;">
+                                <h4 style="color: var(--success); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(16, 185, 129, 0.15); padding-bottom: 6px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                    Top Gainers (Profit)
+                                </h4>
+                                <div id="index-gainers-list" class="movers-list">
+                                    <!-- Dynamic rows -->
+                                </div>
+                            </div>
+
+                            <!-- Top Losers -->
+                            <div style="display: flex; flex-direction: column;">
+                                <h4 style="color: var(--danger); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(239, 68, 68, 0.15); padding-bottom: 6px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                                    Top Losers (Loss)
+                                </h4>
+                                <div id="index-losers-list" class="movers-list">
+                                    <!-- Dynamic rows -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -263,6 +393,46 @@
         </div>
     </div>
     
+    <!-- Industry breakdown details modal overlay -->
+    <div id="industry-modal" class="modal-overlay hidden">
+        <div class="auth-card industry-modal-content glass-panel" style="max-width: 650px; width: 95%; padding: 30px;">
+            <!-- Close Button -->
+            <button id="industry-modal-close" class="auth-back-btn" title="Close" style="top: 16px; right: 16px; left: auto; display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <div class="modal-header-section" style="width: 100%; text-align: left; margin-bottom: 20px;">
+                <span class="verdict-label" style="display: block; margin-bottom: 4px; font-size: 0.8rem; letter-spacing: 1px;">Sector Overview</span>
+                <h2 id="modal-industry-name" style="margin-bottom: 6px; font-size: 1.8rem; font-weight: 700; color: var(--text-main); text-align: left; line-height: 1.2;">Industry Details</h2>
+                <div id="modal-industry-performance" style="font-size: 1rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px;">--%</div>
+            </div>
+
+            <!-- Two Column Layout for Gainers and Losers -->
+            <div class="modal-columns-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; text-align: left;">
+                <div class="modal-col" style="display: flex; flex-direction: column;">
+                    <h4 style="color: var(--success); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(16, 185, 129, 0.15); padding-bottom: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        Gainers (Profit)
+                    </h4>
+                    <div id="modal-gainers-list" class="movers-list" style="gap: 8px; overflow-y: auto; max-height: 250px; padding-right: 4px;">
+                        <!-- JS inserted rows -->
+                    </div>
+                </div>
+
+                <div class="modal-col" style="display: flex; flex-direction: column;">
+                    <h4 style="color: var(--danger); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(239, 68, 68, 0.15); padding-bottom: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                        Losers (Loss)
+                    </h4>
+                    <div id="modal-losers-list" class="movers-list" style="gap: 8px; overflow-y: auto; max-height: 250px; padding-right: 4px;">
+                        <!-- JS inserted rows -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="prediction.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@ import urllib.parse
 import json
 import os
 import datetime
+import concurrent.futures
 
 PORT = int(os.environ.get('PORT', 8000))
 
@@ -94,12 +95,12 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
             elif action == 'top10':
                 symbols_param = query_params.get('symbols', ['RELIANCE.NS'])[0]
                 symbols = [s.strip() for s in symbols_param.split(',')]
+                raw = query_params.get('raw', ['0'])[0] == '1'
                 
-                has_us = any('.NS' not in s and '.BO' not in s for s in symbols)
+                has_us = any('.NS' not in s and '.BO' not in s for s in symbols) if not raw else False
                 exchange_rate = get_exchange_rate() if has_us else 1.0
                 
-                results = []
-                for sym in symbols:
+                def fetch_single_quote(sym):
                     try:
                         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(sym)}?interval=1d&range=1d"
                         data = fetch_json(url)
@@ -107,24 +108,34 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                         meta = result['meta']
                         
                         is_indian = '.NS' in sym or '.BO' in sym
-                        rate = 1.0 if is_indian else exchange_rate
+                        rate = 1.0 if (is_indian or raw) else exchange_rate
                         
                         price = (meta.get('regularMarketPrice') or meta.get('chartPreviousClose')) * rate
                         prev_close = (meta.get('chartPreviousClose') or price) * rate
                         change = price - prev_close
                         pct = (change / prev_close * 100) if prev_close else 0.0
                         
-                        results.append({
+                        return {
                             "symbol": meta.get('symbol', sym),
                             "shortName": meta.get('shortName') or meta.get('longName') or meta.get('symbol', sym),
                             "price": price,
                             "prevClose": prev_close,
                             "change": change,
-                            "percent_change": pct
-                        })
+                            "percent_change": pct,
+                            "currency": meta.get('currency', 'USD')
+                        }
                     except Exception as e:
-                        print(f"Failed to fetch top10 quote for {sym}: {e}")
-                        
+                        print(f"Failed to fetch quote for {sym}: {e}")
+                        return None
+
+                results = []
+                with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(symbols), 40)) as executor:
+                    futures = [executor.submit(fetch_single_quote, sym) for sym in symbols]
+                    for f in concurrent.futures.as_completed(futures):
+                        res = f.result()
+                        if res is not None:
+                            results.append(res)
+                            
                 self.send_json(results)
                 
             elif action == 'search':

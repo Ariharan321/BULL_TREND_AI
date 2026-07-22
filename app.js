@@ -27,6 +27,8 @@ const toastContainer = document.getElementById('toast-container');
 const runAiBtn = document.getElementById('run-ai-btn');
 const aiResults = document.getElementById('ai-results');
 const aiTickerName = document.getElementById('ai-ticker-name');
+const aiStockNameEl = document.getElementById('ai-stock-name');
+const aiStockTickerEl = document.getElementById('ai-stock-ticker');
 
 // State
 let currentSymbol = 'RELIANCE.NS';
@@ -35,6 +37,8 @@ let currentPrice = 0;
 let previousClose = 0;
 let updateInterval = null;
 let activeAlert = null;
+let currentStockData = null;
+let insightsStockData = [];
 
 // Old TOP_10_SYMBOLS declaration removed to fix SyntaxError
 
@@ -161,6 +165,10 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         
         checkAlerts(currentPrice);
         
+        currentStockData = data;
+        
+        if (aiStockNameEl) aiStockNameEl.textContent = data.name || data.symbol;
+        if (aiStockTickerEl) aiStockTickerEl.textContent = data.symbol.replace('.NS', '');
         aiTickerName.textContent = data.symbol.replace('.NS', '');
         document.getElementById('alert-ticker-name').textContent = data.symbol.replace('.NS', '');
 
@@ -268,6 +276,11 @@ function updateChart(labels, data, isPositive) {
 
 // --- AI PREDICT LOGIC ---
 function runAiPrediction() {
+    if (!currentStockData || !currentStockData.prices || currentStockData.prices.length === 0) {
+        showToast('No stock data available to run prediction.', 'error');
+        return;
+    }
+
     runAiBtn.disabled = true;
     runAiBtn.textContent = 'Processing Data...';
     aiResults.classList.remove('hidden');
@@ -280,42 +293,134 @@ function runAiPrediction() {
     document.getElementById('ai-macd-text').textContent = 'Analyzing...';
     document.getElementById('ai-vol-text').textContent = 'Analyzing...';
     
-    // Simulate AI thinking time
+    document.getElementById('ai-verdict').textContent = '--';
+    document.getElementById('ai-verdict').className = 'verdict-direction';
+    document.getElementById('ai-target').textContent = '₹ --';
+    document.getElementById('ai-expected-change').textContent = '--%';
+    document.getElementById('ai-expected-change').className = 'expected-change';
+    document.getElementById('ai-confidence-score').textContent = '--%';
+    document.getElementById('ai-confidence-fill').style.width = '0%';
+    document.getElementById('ai-confidence-badge').textContent = '--';
+    document.getElementById('ai-confidence-badge').className = 'confidence-badge';
+    
+    // Simulate AI thinking/processing time (1.5 seconds for visual impact)
     setTimeout(() => {
-        // Generate pseudo-random deterministic results based on current price
-        const isBullish = Math.random() > 0.4; // 60% chance bullish for effect
+        const prices = currentStockData.prices.filter(p => p > 0);
+        const rsiVal = calculateRSI(prices, 14) || 50;
+        const regression = calculateRegression(prices.slice(-Math.min(prices.length, 60))) || { slope: 0 };
+        const vol = calculateVolatility(prices) || 0.02;
         
-        // Update bars
-        const rsiVal = isBullish ? 65 : 35;
-        const macdVal = isBullish ? 80 : 20;
-        const volVal = 40 + (Math.random() * 40);
+        const quote = {
+            symbol: currentStockData.symbol,
+            price: currentPrice
+        };
+        const chartPoints = currentStockData.prices.map((price, idx) => ({
+            time: currentStockData.labels[idx] || '',
+            price: price
+        }));
         
+        // Compute predictions for tomorrow (1 day projection)
+        const prediction = runStockPrediction(quote, chartPoints, 1);
+        
+        // 1. Update Momentum (RSI) Progress Bar
         const rsiFill = document.getElementById('ai-rsi-fill');
-        const macdFill = document.getElementById('ai-macd-fill');
-        
         rsiFill.style.width = `${rsiVal}%`;
-        rsiFill.style.backgroundColor = isBullish ? '#10b981' : '#ef4444';
-        document.getElementById('ai-rsi-text').textContent = isBullish ? 'Oversold (Buy Signal)' : 'Overbought (Sell Signal)';
+        if (rsiVal > 70) {
+            rsiFill.style.backgroundColor = 'var(--danger)';
+            document.getElementById('ai-rsi-text').textContent = `RSI: ${rsiVal.toFixed(1)} (Overbought / Sell)`;
+        } else if (rsiVal < 30) {
+            rsiFill.style.backgroundColor = 'var(--success)';
+            document.getElementById('ai-rsi-text').textContent = `RSI: ${rsiVal.toFixed(1)} (Oversold / Buy)`;
+        } else {
+            rsiFill.style.backgroundColor = 'var(--primary)';
+            document.getElementById('ai-rsi-text').textContent = `RSI: ${rsiVal.toFixed(1)} (Neutral)`;
+        }
         
-        macdFill.style.width = `${macdVal}%`;
-        macdFill.style.backgroundColor = isBullish ? '#10b981' : '#ef4444';
-        document.getElementById('ai-macd-text').textContent = isBullish ? 'Bullish Crossover' : 'Bearish Crossover';
+        // 2. Update Trend (Linear Regression) Progress Bar
+        const slopePct = regression.slope / currentPrice;
+        // Map slopePct to a percentage from 0 to 100 where 50 is neutral
+        const trendVal = Math.max(0, Math.min(100, 50 + (slopePct * 15000)));
+        const macdFill = document.getElementById('ai-macd-fill');
+        macdFill.style.width = `${trendVal}%`;
+        if (trendVal > 55) {
+            macdFill.style.backgroundColor = 'var(--success)';
+            document.getElementById('ai-macd-text').textContent = `Trend Slope: +${(slopePct * 100).toFixed(4)}% (Bullish)`;
+        } else if (trendVal < 45) {
+            macdFill.style.backgroundColor = 'var(--danger)';
+            document.getElementById('ai-macd-text').textContent = `Trend Slope: ${(slopePct * 100).toFixed(4)}% (Bearish)`;
+        } else {
+            macdFill.style.backgroundColor = 'var(--text-muted)';
+            document.getElementById('ai-macd-text').textContent = `Trend Slope: ${(slopePct * 100).toFixed(4)}% (Flat)`;
+        }
         
-        document.getElementById('ai-vol-fill').style.width = `${volVal}%`;
-        document.getElementById('ai-vol-fill').style.backgroundColor = '#f59e0b';
-        document.getElementById('ai-vol-text').textContent = volVal > 60 ? 'High Volatility' : 'Stable';
+        // 3. Update Volatility Progress Bar
+        const volVal = Math.min(100, vol * 3000); // map up to ~3.3% daily standard deviation as 100%
+        const volFill = document.getElementById('ai-vol-fill');
+        volFill.style.width = `${volVal}%`;
+        if (volVal > 60) {
+            volFill.style.backgroundColor = 'var(--danger)';
+            document.getElementById('ai-vol-text').textContent = `Volatility: ${(vol * 100).toFixed(2)}% (High)`;
+        } else if (volVal > 30) {
+            volFill.style.backgroundColor = '#f59e0b';
+            document.getElementById('ai-vol-text').textContent = `Volatility: ${(vol * 100).toFixed(2)}% (Moderate)`;
+        } else {
+            volFill.style.backgroundColor = 'var(--success)';
+            document.getElementById('ai-vol-text').textContent = `Volatility: ${(vol * 100).toFixed(2)}% (Low / Stable)`;
+        }
         
-        // Final Verdict
+        // 4. Update Final Verdict Grid
         const verdictEl = document.getElementById('ai-verdict');
-        verdictEl.textContent = isBullish ? 'BULLISH' : 'BEARISH';
-        verdictEl.style.color = isBullish ? '#10b981' : '#ef4444';
+        const expectedChangeEl = document.getElementById('ai-expected-change');
+        const targetEl = document.getElementById('ai-target');
+        const confidenceScoreEl = document.getElementById('ai-confidence-score');
+        const confidenceFillEl = document.getElementById('ai-confidence-fill');
+        const confidenceBadgeEl = document.getElementById('ai-confidence-badge');
         
-        const change = (currentPrice * 0.02) + (Math.random() * (currentPrice * 0.03));
-        const target = isBullish ? currentPrice + change : currentPrice - change;
-        document.getElementById('ai-target').textContent = formatINR(target);
+        const isUp = prediction.direction === 'up';
+        const isDown = prediction.direction === 'down';
+        
+        // Update tomorrow's price direction status
+        if (isUp) {
+            verdictEl.textContent = 'INCREASE ▲';
+            verdictEl.className = 'verdict-direction up';
+        } else if (isDown) {
+            verdictEl.textContent = 'DECREASE ▼';
+            verdictEl.className = 'verdict-direction down';
+        } else {
+            verdictEl.textContent = 'STABLE ▬';
+            verdictEl.className = 'verdict-direction flat';
+        }
+        
+        // Update projected target and change percent
+        targetEl.textContent = formatINR(prediction.predictedPrice);
+        const sign = prediction.expectedChange >= 0 ? '+' : '';
+        expectedChangeEl.textContent = `${sign}${prediction.expectedChange.toFixed(2)}%`;
+        expectedChangeEl.className = `expected-change ${prediction.direction}`;
+        
+        // Update confidence
+        const confidence = prediction.confidence;
+        confidenceScoreEl.textContent = `${confidence}%`;
+        confidenceFillEl.style.width = `${confidence}%`;
+        
+        if (confidence >= 70) {
+            confidenceBadgeEl.textContent = 'High Confidence';
+            confidenceBadgeEl.className = 'confidence-badge high';
+            confidenceFillEl.style.backgroundColor = 'var(--success)';
+        } else if (confidence >= 50) {
+            confidenceBadgeEl.textContent = 'Medium Confidence';
+            confidenceBadgeEl.className = 'confidence-badge medium';
+            confidenceFillEl.style.backgroundColor = '#f59e0b';
+        } else {
+            confidenceBadgeEl.textContent = 'Low Confidence';
+            confidenceBadgeEl.className = 'confidence-badge low';
+            confidenceFillEl.style.backgroundColor = 'var(--danger)';
+        }
         
         runAiBtn.textContent = 'Analysis Complete';
-        setTimeout(() => { runAiBtn.disabled = false; runAiBtn.textContent = 'Run Analysis Again'; }, 3000);
+        setTimeout(() => {
+            runAiBtn.disabled = false;
+            runAiBtn.textContent = 'Run Analysis Again';
+        }, 3000);
         
     }, 1500);
 }
@@ -336,6 +441,12 @@ document.querySelectorAll('.nav-item').forEach(item => {
         // Show target view
         const targetId = item.getAttribute('data-target');
         document.getElementById(targetId).classList.add('active');
+        
+        if (targetId === 'view-insights') {
+            loadMarketInsights();
+        } else if (targetId === 'view-indices') {
+            loadGlobalMarkets();
+        }
     });
 });
 
@@ -696,6 +807,611 @@ headerSignupBtn.addEventListener('click', () => {
     showAuthScreen('signup');
 });
 logoutBtn.addEventListener('click', handleLogout);
+
+// --- MARKET INSIGHTS LOGIC ---
+const INSIGHTS_SYMBOLS = [
+    // Technology (13)
+    'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'META', 'AVGO', 'ORCL', 'NFLX',
+    'TCS.NS', 'INFY.NS', 'WIPRO.NS', 'HCLTECH.NS', 'TECHM.NS',
+    // Financial Services (11)
+    'JPM', 'BAC', 'MS', 'GS', 'V', 'MA',
+    'HDFCBANK.NS', 'ICICIBANK.NS', 'SBIN.NS', 'AXISBANK.NS', 'KOTAKBANK.NS',
+    // Consumer Cyclical (10)
+    'TSLA', 'AMZN', 'HD', 'NKE', 'MCD',
+    'TATASTEEL.NS', 'MARUTI.NS', 'M&M.NS', 'TATAMOTORS.NS', 'EICHERMOT.NS',
+    // Energy & Conglomerates (9)
+    'XOM', 'CVX', 'COP',
+    'RELIANCE.NS', 'ONGC.NS', 'NTPC.NS', 'COALINDIA.NS', 'BPCL.NS', 'IOC.NS',
+    // Consumer Goods (10)
+    'PG', 'KO', 'PEP', 'WMT', 'COST',
+    'ITC.NS', 'HINDUNILVR.NS', 'NESTLEIND.NS', 'BRITANNIA.NS', 'TATACONSUM.NS',
+    // Healthcare (11)
+    'LLY', 'JNJ', 'UNH', 'MRK', 'ABBV', 'PFE',
+    'SUNPHARMA.NS', 'CIPLA.NS', 'DRREDDY.NS', 'APOLLOHOSP.NS', 'DIVISLAB.NS'
+];
+
+const STOCK_INDUSTRIES = {
+    // Technology
+    'AAPL': 'Technology', 'MSFT': 'Technology', 'NVDA': 'Technology', 'GOOGL': 'Technology',
+    'META': 'Technology', 'AVGO': 'Technology', 'ORCL': 'Technology', 'NFLX': 'Technology',
+    'TCS.NS': 'Technology', 'INFY.NS': 'Technology', 'WIPRO.NS': 'Technology', 
+    'HCLTECH.NS': 'Technology', 'TECHM.NS': 'Technology',
+    // Financial Services
+    'JPM': 'Financial Services', 'BAC': 'Financial Services', 'MS': 'Financial Services', 
+    'GS': 'Financial Services', 'V': 'Financial Services', 'MA': 'Financial Services',
+    'HDFCBANK.NS': 'Financial Services', 'ICICIBANK.NS': 'Financial Services', 
+    'SBIN.NS': 'Financial Services', 'AXISBANK.NS': 'Financial Services', 'KOTAKBANK.NS': 'Financial Services',
+    // Consumer Cyclical
+    'TSLA': 'Consumer Cyclical', 'AMZN': 'Consumer Cyclical', 'HD': 'Consumer Cyclical', 
+    'NKE': 'Consumer Cyclical', 'MCD': 'Consumer Cyclical',
+    'TATASTEEL.NS': 'Consumer Cyclical', 'MARUTI.NS': 'Consumer Cyclical', 
+    'M&M.NS': 'Consumer Cyclical', 'TATAMOTORS.NS': 'Consumer Cyclical', 'EICHERMOT.NS': 'Consumer Cyclical',
+    // Energy & Conglomerates
+    'XOM': 'Energy & Conglomerates', 'CVX': 'Energy & Conglomerates', 'COP': 'Energy & Conglomerates',
+    'RELIANCE.NS': 'Energy & Conglomerates', 'ONGC.NS': 'Energy & Conglomerates', 
+    'NTPC.NS': 'Energy & Conglomerates', 'COALINDIA.NS': 'Energy & Conglomerates', 
+    'BPCL.NS': 'Energy & Conglomerates', 'IOC.NS': 'Energy & Conglomerates',
+    // Consumer Goods
+    'PG': 'Consumer Goods', 'KO': 'Consumer Goods', 'PEP': 'Consumer Goods', 
+    'WMT': 'Consumer Goods', 'COST': 'Consumer Goods',
+    'ITC.NS': 'Consumer Goods', 'HINDUNILVR.NS': 'Consumer Goods', 
+    'NESTLEIND.NS': 'Consumer Goods', 'BRITANNIA.NS': 'Consumer Goods', 'TATACONSUM.NS': 'Consumer Goods',
+    // Healthcare
+    'LLY': 'Healthcare', 'JNJ': 'Healthcare', 'UNH': 'Healthcare', 'MRK': 'Healthcare', 
+    'ABBV': 'Healthcare', 'PFE': 'Healthcare',
+    'SUNPHARMA.NS': 'Healthcare', 'CIPLA.NS': 'Healthcare', 'DRREDDY.NS': 'Healthcare', 
+    'APOLLOHOSP.NS': 'Healthcare', 'DIVISLAB.NS': 'Healthcare'
+};
+
+async function loadMarketInsights() {
+    const growingList = document.getElementById('growing-stocks-list');
+    const fallingList = document.getElementById('falling-stocks-list');
+    const industriesList = document.getElementById('trending-industries-list');
+    
+    if (growingList) growingList.innerHTML = '<div class="loader-small"></div>';
+    if (fallingList) fallingList.innerHTML = '<div class="loader-small"></div>';
+    if (industriesList) industriesList.innerHTML = '<div class="loader-small"></div>';
+    
+    try {
+        const symbols = INSIGHTS_SYMBOLS.join(',');
+        const url = `/.netlify/functions/stock?action=top10&symbols=${symbols}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch insights data');
+        const data = await response.json();
+        
+        insightsStockData = data;
+        
+        // Filter and map industry names
+        data.forEach(item => {
+            item.industry = STOCK_INDUSTRIES[item.symbol] || 'Other';
+        });
+        
+        // 1. Render Growing Stocks (sort descending by pct, take top 10)
+        const growing = [...data].sort((a, b) => b.percent_change - a.percent_change).slice(0, 10);
+        if (growingList) {
+            growingList.innerHTML = '';
+            if (growing.length === 0) {
+                growingList.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;padding:10px;">No growing stocks found.</p>';
+            }
+            growing.forEach(stock => {
+                const row = createMoverRow(stock);
+                growingList.appendChild(row);
+            });
+        }
+        
+        // 2. Render Falling Stocks (sort ascending by pct, take top 10)
+        const falling = [...data].sort((a, b) => a.percent_change - b.percent_change).slice(0, 10);
+        if (fallingList) {
+            fallingList.innerHTML = '';
+            if (falling.length === 0) {
+                fallingList.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;padding:10px;">No falling stocks found.</p>';
+            }
+            falling.forEach(stock => {
+                const row = createMoverRow(stock);
+                fallingList.appendChild(row);
+            });
+        }
+        
+        // 3. Render Trending Industries
+        // Group by industry and calculate average change
+        const industriesMap = {};
+        data.forEach(stock => {
+            if (!industriesMap[stock.industry]) {
+                industriesMap[stock.industry] = [];
+            }
+            industriesMap[stock.industry].push(stock.percent_change);
+        });
+        
+        const industriesListArray = Object.keys(industriesMap).map(industry => {
+            const changes = industriesMap[industry];
+            const avgChange = changes.reduce((sum, val) => sum + val, 0) / changes.length;
+            return { name: industry, change: avgChange };
+        });
+        
+        // Sort industries descending by average change
+        industriesListArray.sort((a, b) => b.change - a.change);
+        
+        if (industriesList) {
+            industriesList.innerHTML = '';
+            if (industriesListArray.length === 0) {
+                industriesList.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;padding:10px;">No industries found.</p>';
+            }
+            industriesListArray.forEach(ind => {
+                const row = createIndustryRow(ind);
+                industriesList.appendChild(row);
+            });
+        }
+        
+    } catch (e) {
+        console.error("Error loading insights:", e);
+        if (growingList) growingList.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;padding:10px;">Failed to load growing stocks.</p>';
+        if (fallingList) fallingList.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;padding:10px;">Failed to load falling stocks.</p>';
+        if (industriesList) industriesList.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;padding:10px;">Failed to load trending industries.</p>';
+        showToast('Failed to load market insights.', 'error');
+    }
+}
+
+function createMoverRow(stock) {
+    const div = document.createElement('div');
+    div.className = 'mover-row';
+    const isUp = stock.percent_change >= 0;
+    const pctSign = isUp ? '+' : '';
+    const symbolBase = stock.symbol.replace('.NS', '');
+    
+    div.innerHTML = `
+        <div class="mover-info">
+            <span class="mover-name" title="${stock.shortName}">${stock.shortName}</span>
+            <span class="mover-symbol">${symbolBase} • ${stock.industry}</span>
+        </div>
+        <div class="mover-trend">
+            <span class="mover-price">${formatINR(stock.price)}</span>
+            <span class="mover-pct ${isUp ? 'up' : 'down'}">
+                ${isUp ? '▲' : '▼'} ${pctSign}${stock.percent_change.toFixed(2)}%
+            </span>
+        </div>
+    `;
+    
+    // Clicking a mover row updates the main stock tracker search
+    div.addEventListener('click', () => {
+        // Switch to dashboard first
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        const dashTab = document.querySelector('[data-target="view-dashboard"]');
+        if (dashTab) dashTab.classList.add('active');
+        
+        document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+        const dashView = document.getElementById('view-dashboard');
+        if (dashView) dashView.classList.add('active');
+        
+        symbolInput.value = stock.symbol;
+        searchBtn.click();
+    });
+    
+    return div;
+}
+
+function createIndustryRow(ind) {
+    const div = document.createElement('div');
+    div.className = 'industry-row';
+    const isUp = ind.change >= 0;
+    const changeSign = isUp ? '+' : '';
+    
+    // Calculate a relative width for the bar: Magnitude * 30 capped at 100%
+    const fillWidth = Math.min(100, Math.max(5, Math.abs(ind.change) * 30));
+    const statusClass = ind.change > 0.1 ? 'up' : (ind.change < -0.1 ? 'down' : 'flat');
+    
+    div.innerHTML = `
+        <div class="industry-info">
+            <span class="industry-name">${ind.name}</span>
+            <span class="industry-change ${statusClass}">
+                ${isUp ? '▲' : '▼'} ${changeSign}${ind.change.toFixed(2)}%
+            </span>
+        </div>
+        <div class="industry-progress-bar">
+            <div class="industry-progress-fill ${statusClass}" style="width: 0%"></div>
+        </div>
+    `;
+    
+    div.addEventListener('click', () => {
+        openIndustryBreakdown(ind.name, ind.change);
+    });
+    
+    // Animate progress fill width on load
+    setTimeout(() => {
+        const fill = div.querySelector('.industry-progress-fill');
+        if (fill) fill.style.width = `${fillWidth}%`;
+    }, 50);
+    
+    return div;
+}
+
+function openIndustryBreakdown(industryName, avgChange) {
+    const modal = document.getElementById('industry-modal');
+    const modalTitle = document.getElementById('modal-industry-name');
+    const modalPerf = document.getElementById('modal-industry-performance');
+    const gainersList = document.getElementById('modal-gainers-list');
+    const losersList = document.getElementById('modal-losers-list');
+    
+    if (!modal || !modalTitle || !modalPerf || !gainersList || !losersList) return;
+    
+    modalTitle.textContent = industryName;
+    
+    const isUp = avgChange >= 0;
+    const sign = isUp ? '+' : '';
+    modalPerf.textContent = `${isUp ? '▲' : '▼'} ${sign}${avgChange.toFixed(2)}%`;
+    
+    if (isUp) {
+        modalPerf.className = 'modal-industry-performance up';
+    } else if (avgChange < -0.1) {
+        modalPerf.className = 'modal-industry-performance down';
+    } else {
+        modalPerf.className = 'modal-industry-performance flat';
+    }
+    
+    // Filter stocks by this industry
+    const sectorStocks = insightsStockData.filter(stock => stock.industry === industryName);
+    
+    // Separate into profit makers (>= 0) and loss makers (< 0)
+    const gainers = sectorStocks.filter(stock => stock.percent_change >= 0).sort((a, b) => b.percent_change - a.percent_change);
+    const losers = sectorStocks.filter(stock => stock.percent_change < 0).sort((a, b) => a.percent_change - b.percent_change);
+    
+    // Populate lists
+    gainersList.innerHTML = '';
+    if (gainers.length === 0) {
+        gainersList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:12px 10px;text-align:center;">No gainers today.</p>';
+    } else {
+        gainers.forEach(stock => {
+            gainersList.appendChild(createModalStockRow(stock));
+        });
+    }
+    
+    losersList.innerHTML = '';
+    if (losers.length === 0) {
+        losersList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:12px 10px;text-align:center;">No losers today.</p>';
+    } else {
+        losers.forEach(stock => {
+            losersList.appendChild(createModalStockRow(stock));
+        });
+    }
+    
+    // Display Modal
+    modal.classList.remove('hidden');
+}
+
+function createModalStockRow(stock) {
+    const div = document.createElement('div');
+    div.className = 'mover-row';
+    const isUp = stock.percent_change >= 0;
+    const pctSign = isUp ? '+' : '';
+    const symbolBase = stock.symbol.replace('.NS', '');
+    
+    div.innerHTML = `
+        <div class="mover-info">
+            <span class="mover-name" style="font-size:0.9rem;" title="${stock.shortName}">${stock.shortName}</span>
+            <span class="mover-symbol" style="font-size:0.75rem;">${symbolBase}</span>
+        </div>
+        <div class="mover-trend">
+            <span class="mover-price" style="font-size:0.9rem;">${formatINR(stock.price)}</span>
+            <span class="mover-pct ${isUp ? 'up' : 'down'}" style="font-size:0.8rem;">
+                ${isUp ? '▲' : '▼'} ${pctSign}${stock.percent_change.toFixed(2)}%
+            </span>
+        </div>
+    `;
+    
+    div.addEventListener('click', () => {
+        // Close modal
+        const modal = document.getElementById('industry-modal');
+        if (modal) modal.classList.add('hidden');
+        
+        // Navigate to dashboard
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        const dashTab = document.querySelector('[data-target="view-dashboard"]');
+        if (dashTab) dashTab.classList.add('active');
+        
+        document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+        const dashView = document.getElementById('view-dashboard');
+        if (dashView) dashView.classList.add('active');
+        
+        symbolInput.value = stock.symbol;
+        searchBtn.click();
+    });
+    
+    return div;
+}
+
+// --- GLOBAL MARKETS LOGIC ---
+const GLOBAL_INDICES = [
+    { symbol: '^NSEI', name: 'Nifty 50', country: 'India', flag: '🇮🇳', currency: 'INR' },
+    { symbol: '^BSESN', name: 'BSE Sensex', country: 'India', flag: '🇮🇳', currency: 'INR' },
+    { symbol: '^GSPC', name: 'S&P 500', country: 'United States', flag: '🇺🇸', currency: 'USD' },
+    { symbol: '^IXIC', name: 'Nasdaq Composite', country: 'United States', flag: '🇺🇸', currency: 'USD' },
+    { symbol: '^FTSE', name: 'FTSE 100', country: 'United Kingdom', flag: '🇬🇧', currency: 'GBP' },
+    { symbol: '^N225', name: 'Nikkei 225', country: 'Japan', flag: '🇯🇵', currency: 'JPY' },
+    { symbol: '^GDAXI', name: 'DAX Performance Index', country: 'Germany', flag: '🇩🇪', currency: 'EUR' },
+    { symbol: '^FCHI', name: 'CAC 40', country: 'France', flag: '🇫🇷', currency: 'EUR' }
+];
+
+const GLOBAL_INDEX_STOCKS = {
+    '^NSEI': [
+        { symbol: 'RELIANCE.NS', name: 'Reliance Industries' },
+        { symbol: 'TCS.NS', name: 'Tata Consultancy Services' },
+        { symbol: 'HDFCBANK.NS', name: 'HDFC Bank' },
+        { symbol: 'ICICIBANK.NS', name: 'ICICI Bank' },
+        { symbol: 'INFY.NS', name: 'Infosys' },
+        { symbol: 'SBIN.NS', name: 'State Bank of India' },
+        { symbol: 'ITC.NS', name: 'ITC Limited' },
+        { symbol: 'LT.NS', name: 'Larsen & Toubro' }
+    ],
+    '^BSESN': [
+        { symbol: 'RELIANCE.NS', name: 'Reliance Industries' },
+        { symbol: 'TCS.NS', name: 'Tata Consultancy Services' },
+        { symbol: 'HDFCBANK.NS', name: 'HDFC Bank' },
+        { symbol: 'ICICIBANK.NS', name: 'ICICI Bank' },
+        { symbol: 'INFY.NS', name: 'Infosys' },
+        { symbol: 'SBIN.NS', name: 'State Bank of India' },
+        { symbol: 'ITC.NS', name: 'ITC Limited' },
+        { symbol: 'LT.NS', name: 'Larsen & Toubro' }
+    ],
+    '^GSPC': [
+        { symbol: 'AAPL', name: 'Apple Inc.' },
+        { symbol: 'MSFT', name: 'Microsoft Corp.' },
+        { symbol: 'NVDA', name: 'NVIDIA Corp.' },
+        { symbol: 'GOOGL', name: 'Alphabet Inc.' },
+        { symbol: 'AMZN', name: 'Amazon.com Inc.' },
+        { symbol: 'META', name: 'Meta Platforms' },
+        { symbol: 'TSLA', name: 'Tesla Inc.' },
+        { symbol: 'JPM', name: 'JPMorgan Chase' }
+    ],
+    '^IXIC': [
+        { symbol: 'AAPL', name: 'Apple Inc.' },
+        { symbol: 'MSFT', name: 'Microsoft Corp.' },
+        { symbol: 'NVDA', name: 'NVIDIA Corp.' },
+        { symbol: 'GOOGL', name: 'Alphabet Inc.' },
+        { symbol: 'AMZN', name: 'Amazon.com Inc.' },
+        { symbol: 'META', name: 'Meta Platforms' },
+        { symbol: 'TSLA', name: 'Tesla Inc.' },
+        { symbol: 'AVGO', name: 'Broadcom Inc.' }
+    ],
+    '^FTSE': [
+        { symbol: 'SHEL.L', name: 'Shell Plc' },
+        { symbol: 'AZN.L', name: 'AstraZeneca Plc' },
+        { symbol: 'HSBA.L', name: 'HSBC Holdings' },
+        { symbol: 'ULVR.L', name: 'Unilever Plc' },
+        { symbol: 'BP.L', name: 'BP Plc' },
+        { symbol: 'GSK.L', name: 'GSK Plc' },
+        { symbol: 'DGE.L', name: 'Diageo Plc' },
+        { symbol: 'RIO.L', name: 'Rio Tinto' }
+    ],
+    '^N225': [
+        { symbol: '7203.T', name: 'Toyota Motor' },
+        { symbol: '9984.T', name: 'SoftBank Group' },
+        { symbol: '6758.T', name: 'Sony Group' },
+        { symbol: '6861.T', name: 'Keyence Corp' },
+        { symbol: '8035.T', name: 'Tokyo Electron' },
+        { symbol: '9432.T', name: 'NTT' },
+        { symbol: '4502.T', name: 'Takeda Pharma' },
+        { symbol: '8306.T', name: 'MUFG Financial' }
+    ],
+    '^GDAXI': [
+        { symbol: 'SAP.DE', name: 'SAP SE' },
+        { symbol: 'SIE.DE', name: 'Siemens AG' },
+        { symbol: 'ALV.DE', name: 'Allianz SE' },
+        { symbol: 'DTG.DE', name: 'Daimler Truck' },
+        { symbol: 'VOW3.DE', name: 'Volkswagen' },
+        { symbol: 'BAYN.DE', name: 'Bayer AG' },
+        { symbol: 'BAS.DE', name: 'BASF SE' },
+        { symbol: 'BMW.DE', name: 'BMW AG' }
+    ],
+    '^FCHI': [
+        { symbol: 'MC.PA', name: 'LVMH Moet Hennessy' },
+        { symbol: 'OR.PA', name: 'L\'Oreal SA' },
+        { symbol: 'RMS.PA', name: 'Hermes International' },
+        { symbol: 'TTE.PA', name: 'TotalEnergies SE' },
+        { symbol: 'SAN.PA', name: 'Sanofi SA' },
+        { symbol: 'SU.PA', name: 'Schneider Electric' },
+        { symbol: 'AIR.PA', name: 'Airbus SE' },
+        { symbol: 'BNP.PA', name: 'BNP Paribas' }
+    ]
+};
+
+function formatIndexOrCurrency(price, symbol, currency) {
+    if (symbol && symbol.startsWith('^')) {
+        return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price);
+    }
+    if (!currency) return formatINR(price);
+    const upperCurr = currency.toUpperCase();
+    if (upperCurr === 'INR') {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(price);
+    } else if (upperCurr === 'USD') {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+    } else if (upperCurr === 'EUR') {
+        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(price);
+    } else if (upperCurr === 'GBP') {
+        return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(price);
+    } else if (upperCurr === 'GBp') {
+        return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(price / 100);
+    } else if (upperCurr === 'JPY') {
+        return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(price);
+    } else {
+        return `${currency} ${price.toFixed(2)}`;
+    }
+}
+
+async function loadGlobalMarkets() {
+    const grid = document.getElementById('global-indices-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = '<div class="loader-small"></div>';
+    
+    const breakdownCard = document.getElementById('index-breakdown-card');
+    if (breakdownCard) breakdownCard.classList.add('hidden');
+    
+    try {
+        const symbols = GLOBAL_INDICES.map(idx => idx.symbol).join(',');
+        const url = `/.netlify/functions/stock?action=top10&symbols=${symbols}&raw=1`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch global indices');
+        const data = await response.json();
+        
+        grid.innerHTML = '';
+        GLOBAL_INDICES.forEach(indexMeta => {
+            const quote = data.find(q => q.symbol === indexMeta.symbol);
+            if (!quote) return;
+            
+            const card = createIndexCard(indexMeta, quote);
+            grid.appendChild(card);
+        });
+        
+    } catch (e) {
+        console.error("Error loading global markets:", e);
+        grid.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;padding:10px;text-align:center;">Failed to load world stock indices.</p>';
+        showToast('Failed to load global market index feeds.', 'error');
+    }
+}
+
+function createIndexCard(indexMeta, quote) {
+    const div = document.createElement('div');
+    div.className = 'index-card';
+    const isUp = quote.percent_change >= 0;
+    const sign = isUp ? '+' : '';
+    
+    div.innerHTML = `
+        <div class="index-card-top">
+            <span class="index-card-title">${indexMeta.name}</span>
+            <span class="index-card-flag">${indexMeta.flag}</span>
+        </div>
+        <div class="index-card-bottom">
+            <span class="index-card-points">${formatIndexOrCurrency(quote.price, indexMeta.symbol, quote.currency)}</span>
+            <span class="index-card-change ${isUp ? 'up' : 'down'}">
+                ${isUp ? '▲' : '▼'} ${sign}${quote.percent_change.toFixed(2)}%
+            </span>
+        </div>
+    `;
+    
+    div.addEventListener('click', () => {
+        document.querySelectorAll('.index-card').forEach(c => c.classList.remove('active'));
+        div.classList.add('active');
+        
+        loadIndexBreakdown(indexMeta, quote);
+    });
+    
+    return div;
+}
+
+async function loadIndexBreakdown(indexMeta, indexQuote) {
+    const breakdownCard = document.getElementById('index-breakdown-card');
+    const flagEl = document.getElementById('breakdown-country-flag');
+    const nameEl = document.getElementById('breakdown-index-name');
+    const symEl = document.getElementById('breakdown-index-symbol');
+    const perfEl = document.getElementById('breakdown-index-performance');
+    const gainersList = document.getElementById('index-gainers-list');
+    const losersList = document.getElementById('index-losers-list');
+    
+    if (!breakdownCard || !gainersList || !losersList) return;
+    
+    flagEl.textContent = indexMeta.flag;
+    nameEl.textContent = `${indexMeta.name} Companies`;
+    symEl.textContent = indexMeta.symbol;
+    
+    const isUp = indexQuote.percent_change >= 0;
+    const sign = isUp ? '+' : '';
+    perfEl.textContent = `${isUp ? '▲' : '▼'} ${sign}${indexQuote.percent_change.toFixed(2)}%`;
+    perfEl.className = isUp ? 'positive' : 'negative';
+    
+    gainersList.innerHTML = '<div class="loader-small"></div>';
+    losersList.innerHTML = '<div class="loader-small"></div>';
+    breakdownCard.classList.remove('hidden');
+    
+    breakdownCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    try {
+        const stocks = GLOBAL_INDEX_STOCKS[indexMeta.symbol] || [];
+        if (stocks.length === 0) {
+            gainersList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:10px;text-align:center;">No stocks mapped.</p>';
+            losersList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:10px;text-align:center;">No stocks mapped.</p>';
+            return;
+        }
+        
+        const symbols = stocks.map(s => s.symbol).join(',');
+        const url = `/.netlify/functions/stock?action=top10&symbols=${symbols}&raw=1`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch index stock quotes');
+        const data = await response.json();
+        
+        const gainers = data.filter(stock => stock.percent_change >= 0).sort((a, b) => b.percent_change - a.percent_change);
+        const losers = data.filter(stock => stock.percent_change < 0).sort((a, b) => a.percent_change - b.percent_change);
+        
+        gainersList.innerHTML = '';
+        if (gainers.length === 0) {
+            gainersList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:12px 10px;text-align:center;">No gainers today.</p>';
+        } else {
+            gainers.forEach(stock => {
+                gainersList.appendChild(createIndexStockRow(stock));
+            });
+        }
+        
+        losersList.innerHTML = '';
+        if (losers.length === 0) {
+            losersList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:12px 10px;text-align:center;">No losers today.</p>';
+        } else {
+            losers.forEach(stock => {
+                losersList.appendChild(createIndexStockRow(stock));
+            });
+        }
+        
+    } catch (e) {
+        console.error("Error loading index breakdown:", e);
+        gainersList.innerHTML = '<p style="color:var(--danger);font-size:0.85rem;padding:10px;text-align:center;">Failed to load gainers.</p>';
+        losersList.innerHTML = '<p style="color:var(--danger);font-size:0.85rem;padding:10px;text-align:center;">Failed to load losers.</p>';
+    }
+}
+
+function createIndexStockRow(stock) {
+    const div = document.createElement('div');
+    div.className = 'mover-row';
+    const isUp = stock.percent_change >= 0;
+    const pctSign = isUp ? '+' : '';
+    const symbolBase = stock.symbol.replace('.NS', '');
+    
+    div.innerHTML = `
+        <div class="mover-info">
+            <span class="mover-name" style="font-size:0.9rem;" title="${stock.shortName}">${stock.shortName}</span>
+            <span class="mover-symbol" style="font-size:0.75rem;">${symbolBase}</span>
+        </div>
+        <div class="mover-trend">
+            <span class="mover-price" style="font-size:0.9rem;">${formatIndexOrCurrency(stock.price, stock.symbol, stock.currency)}</span>
+            <span class="mover-pct ${isUp ? 'up' : 'down'}" style="font-size:0.8rem;">
+                ${isUp ? '▲' : '▼'} ${pctSign}${stock.percent_change.toFixed(2)}%
+            </span>
+        </div>
+    `;
+    
+    div.addEventListener('click', () => {
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        const dashTab = document.querySelector('[data-target="view-dashboard"]');
+        if (dashTab) dashTab.classList.add('active');
+        
+        document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+        const dashView = document.getElementById('view-dashboard');
+        if (dashView) dashView.classList.add('active');
+        
+        symbolInput.value = stock.symbol;
+        searchBtn.click();
+    });
+    
+    return div;
+}
+
+// Bind modal close triggers
+const modalCloseBtn = document.getElementById('industry-modal-close');
+const modalOverlay = document.getElementById('industry-modal');
+if (modalCloseBtn) {
+    modalCloseBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+}
+if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
+    });
+}
 
 // Initialize application on DOM load
 document.addEventListener('DOMContentLoaded', () => {
