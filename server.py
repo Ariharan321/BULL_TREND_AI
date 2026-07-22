@@ -9,6 +9,7 @@ import time
 import yfinance as yf
 
 INFO_CACHE = {}
+SEARCH_RESULT_CACHE = {}
 CACHE_DURATION = 300
 
 def get_ticker_info(symbol):
@@ -223,10 +224,17 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(results)
                 
             elif action == 'search':
-                q = query_params.get('q', [''])[0]
-                if not q.strip():
+                q = query_params.get('q', [''])[0].strip().lower()
+                if not q:
                     self.send_json([])
                     return
+                    
+                current_time = time.time()
+                if q in SEARCH_RESULT_CACHE:
+                    cache_time, results = SEARCH_RESULT_CACHE[q]
+                    if current_time - cache_time < 600: # 10 minute cache
+                        self.send_json(results)
+                        return
                     
                 url = f"https://query1.finance.yahoo.com/v1/finance/search?q={urllib.parse.quote(q)}"
                 data = fetch_json(url)
@@ -240,6 +248,8 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                             "name": item.get('longname') or item.get('shortname') or item.get('symbol', ''),
                             "exchange": item.get('exchDisp') or item.get('exchange', '')
                         })
+                        
+                SEARCH_RESULT_CACHE[q] = (current_time, results)
                 self.send_json(results)
                 
         except Exception as e:

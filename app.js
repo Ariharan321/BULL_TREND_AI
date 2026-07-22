@@ -611,7 +611,7 @@ symbolInput.addEventListener('input', () => {
         } catch(e) {
             console.error("Suggestions error:", e);
         }
-    }, 150); // Reduced to 150ms debounce
+    }, 350); // Optimized to 350ms debounce to filter out intermediate keystrokes
 });
 
 // Close suggestions when clicking outside
