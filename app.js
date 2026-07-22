@@ -67,10 +67,16 @@ let activeStockDetails = null; // Stores current stock full metadata response
 // Old TOP_10_SYMBOLS declaration removed to fix SyntaxError
 
 // Initialize Chart.js with custom dark theme colors
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.font.family = "'Outfit', sans-serif";
+if (typeof Chart !== 'undefined') {
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = "'Outfit', sans-serif";
+}
 
 function initChart() {
+    if (typeof Chart === 'undefined') {
+        console.error("Chart.js is not loaded.");
+        return;
+    }
     const ctx = document.getElementById('stockChart').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
@@ -278,6 +284,7 @@ function updateDashboardUI(symbol, name, price, changeVal, changePct) {
 }
 
 function updateChart(labels, data, isPositive) {
+    if (!stockChart) return;
     stockChart.data.labels = labels;
     stockChart.data.datasets[0].data = data;
     
@@ -1675,10 +1682,10 @@ function createIndexStockRow(stock) {
 }
 
 // Bind modal close triggers
-const modalCloseBtn = document.getElementById('industry-modal-close');
+const industryModalCloseBtn = document.getElementById('industry-modal-close');
 const modalOverlay = document.getElementById('industry-modal');
-if (modalCloseBtn) {
-    modalCloseBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
+if (industryModalCloseBtn) {
+    industryModalCloseBtn.addEventListener('click', () => modalOverlay.classList.add('hidden'));
 }
 if (modalOverlay) {
     modalOverlay.addEventListener('click', (e) => {
