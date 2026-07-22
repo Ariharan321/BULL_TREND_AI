@@ -6,7 +6,7 @@ import json
 import os
 import datetime
 
-PORT = 8000
+PORT = int(os.environ.get('PORT', 8000))
 
 class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
