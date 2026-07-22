@@ -1,0 +1,17 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Netlify dev or local dev overrides
+.netlify/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
