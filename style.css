@@ -651,14 +651,14 @@ body {
 /* Know More Button */
 .know-more-btn {
     margin-left: auto; /* Push to the far right inside flex container */
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--primary);
-    border: 1px solid rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(59, 130, 246, 0.5);
     padding: 8px 16px;
     border-radius: 12px;
     cursor: pointer;
     font-family: var(--font-family);
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.85rem;
     display: inline-flex;
     align-items: center;
@@ -698,7 +698,7 @@ body {
 
 .modal-content {
     width: 90%;
-    max-width: 650px;
+    max-width: 750px;
     max-height: 85vh;
     background: rgba(30, 41, 59, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -772,12 +772,18 @@ body {
 
 .modal-metrics-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 24px;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
+    .modal-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 420px) {
     .modal-metrics-grid {
         grid-template-columns: 1fr;
     }

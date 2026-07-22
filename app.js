@@ -27,6 +27,10 @@ const modal52wRange = document.getElementById('modal-52w-range');
 const modalPrevClose = document.getElementById('modal-prev-close');
 const modalCurrentPrice = document.getElementById('modal-current-price');
 const modalCompanyDesc = document.getElementById('modal-company-desc');
+const modalBookValue = document.getElementById('modal-book-value');
+const modalFaceValue = document.getElementById('modal-face-value');
+const modalRoce = document.getElementById('modal-roce');
+const modalRoe = document.getElementById('modal-roe');
 
 // Top 10 Elements
 const top10ListEl = document.getElementById('top10-list');
@@ -710,64 +714,104 @@ signupConfirmPasswordInput.addEventListener('keypress', (e) => { if (e.key === '
 // Modal & Company Database Helpers
 const companyDatabase = {
     'RELIANCE.NS': {
-        shares: 6765000000,
-        pe: 25.4,
-        yield: '0.78%',
-        desc: 'Reliance Industries Limited is an Indian multinational conglomerate company, headquartered in Mumbai. It has businesses across energy, petrochemicals, natural gas, retail, telecommunications, mass media, and textiles.'
+        shares: 13530000000,
+        pe: 23.4,
+        yield: '0.46%',
+        book: 668,
+        face: 10.0,
+        roce: '10.3%',
+        roe: '8.91%',
+        desc: "Reliance was founded by Dhirubhai Ambani and is now promoted and managed by his elder son, Mukesh Dhirubhai Ambani. Ambani's family has about 50% shareholding in the conglomerate. It is India's largest private sector enterprise, spanning energy, petrochemicals, natural gas, retail, telecommunications, and media."
     },
     'TCS.NS': {
         shares: 3618000000,
         pe: 30.1,
-        yield: '1.15%',
-        desc: 'Tata Consultancy Services Limited is an Indian multinational information technology services and consulting company headquartered in Mumbai. It is a part of the Tata Group and operates in 150 locations across 46 countries.'
+        yield: '1.20%',
+        book: 282,
+        face: 1.0,
+        roce: '62.5%',
+        roe: '50.8%',
+        desc: "Tata Consultancy Services Limited (TCS) is a leading global IT services, consulting, and business solutions organization. Part of the Tata Group, India's largest multinational business group, TCS has over 600,000 consultants worldwide."
     },
     'HDFCBANK.NS': {
         shares: 7600000000,
         pe: 18.5,
-        yield: '1.20%',
-        desc: "HDFC Bank Limited is an Indian banking and financial services company headquartered in Mumbai. It is India's largest private sector bank by assets and the world's tenth-largest bank by market capitalization."
+        yield: '1.10%',
+        book: 560,
+        face: 1.0,
+        roce: '8.2%',
+        roe: '15.4%',
+        desc: "HDFC Bank Limited is India's leading private sector bank and was nearly the first to receive an 'in principle' approval from the RBI to set up a private bank. It is headquartered in Mumbai and offers a range of financial services."
     },
     'ICICIBANK.NS': {
-        shares: 7000000000,
+        shares: 7010000000,
         pe: 17.8,
-        yield: '0.69%',
-        desc: 'ICICI Bank Limited is an Indian multinational banking and financial services company headquartered in Mumbai. It offers a wide range of banking products and financial services for corporate and retail customers.'
+        yield: '0.70%',
+        book: 320,
+        face: 2.0,
+        roce: '7.8%',
+        roe: '18.5%',
+        desc: "ICICI Bank Limited is a leading private sector bank in India, offering commercial banking, investment banking, life/non-life insurance, venture capital, and asset management services through various channels and subsidiaries."
     },
     'INFY.NS': {
         shares: 4150000000,
         pe: 24.2,
-        yield: '2.35%',
-        desc: 'Infosys Limited is an Indian multinational information technology company that provides business consulting, information technology and outsourcing services. It was founded in Pune and is headquartered in Bangalore.'
+        yield: '2.40%',
+        book: 210,
+        face: 5.0,
+        roce: '40.5%',
+        roe: '32.1%',
+        desc: "Infosys Limited is a global leader in next-generation digital services and consulting. It enables clients in more than 56 countries to navigate their digital transformation, founded in Pune and headquartered in Bengaluru."
     },
     'AAPL': {
         shares: 15330000000,
         pe: 31.2,
         yield: '0.52%',
-        desc: "Apple Inc. is an American multinational technology company headquartered in Cupertino, California. Apple is the world's largest technology company by revenue, manufacturing smartphones, PCs, tablets, wearables, and services."
+        book: 400.8,
+        face: 0.08,
+        roce: '58.2%',
+        roe: '150%',
+        desc: "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories, and sells a variety of related services globally. Apple is the world's largest technology company by revenue."
     },
     'TSLA': {
         shares: 3189000000,
         pe: 58.7,
         yield: 'N/A',
-        desc: 'Tesla, Inc. is an American multinational automotive and clean energy company headquartered in Austin, Texas. Tesla designs and manufactures electric vehicles, battery energy storage, solar panels, and related products.'
+        book: 1711.5,
+        face: 0.08,
+        roce: '12.5%',
+        roe: '14.2%',
+        desc: "Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, and energy generation and storage systems in the United States, China, and internationally, operating under automotive and energy segments."
     },
     'MSFT': {
         shares: 7432000000,
         pe: 35.4,
         yield: '0.72%',
-        desc: 'Microsoft Corporation is an American multinational technology corporation headquartered in Redmond, Washington. It is best known for its Windows operating system, Office suite, and Azure cloud computing.'
+        book: 2212.8,
+        face: 0.08,
+        roce: '28.5%',
+        roe: '38.2%',
+        desc: "Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide, well known for its Windows operating system, Microsoft 365, Azure, and Xbox gaming."
     },
     'NVDA': {
         shares: 24600000000,
         pe: 68.2,
         yield: '0.02%',
-        desc: 'NVIDIA Corporation is an American multinational corporation and technology company headquartered in Santa Clara, California. It designs graphics processing units (GPUs) and application programming interfaces (APIs) for AI and high-performance computing.'
+        book: 310.5,
+        face: 0.08,
+        roce: '48.2%',
+        roe: '52.1%',
+        desc: "NVIDIA Corporation focuses on personal computer graphics, graphics processing units, and also on artificial intelligence solutions, headquartered in Santa Clara, California."
     },
     'GOOGL': {
         shares: 12000000000,
         pe: 26.8,
         yield: '0.45%',
-        desc: 'Alphabet Inc. is an American multinational technology conglomerate holding company headquartered in Mountain View, California. It is the world\'s leader in search engine technology, online advertising, and cloud computing.'
+        book: 1410.8,
+        face: 0.08,
+        roce: '20.3%',
+        roe: '22.8%',
+        desc: "Alphabet Inc. offers Google Services, Google Cloud, and Other Bets. Its Google Services segment includes products and services such as Ads, Android, Chrome, Hardware, Gmail, Google Drive, Google Maps, Google Play, Search, and YouTube."
     }
 };
 
@@ -785,6 +829,9 @@ function getCompanyDetails(symbol, name) {
         return companyDatabase[Object.keys(companyDatabase)[idx]];
     }
     
+    const isIndian = key.includes('.NS') || key.includes('.BO') || ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK'].includes(cleanKey);
+    const exchange = isIndian ? 'NSE' : 'US Market';
+
     let hash = 0;
     for (let i = 0; i < cleanKey.length; i++) {
         hash = cleanKey.charCodeAt(i) + ((hash << 5) - hash);
@@ -796,8 +843,10 @@ function getCompanyDetails(symbol, name) {
     const simulatedYield = yields[hash % yields.length];
     const simulatedShares = ((hash % 15) + 1) * 500000000;
     
-    const isIndian = key.includes('.NS') || key.includes('.BO') || ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'ICICIBANK'].includes(cleanKey);
-    const exchange = isIndian ? 'NSE' : 'US Market';
+    const simulatedBook = ((hash % 400) + 50);
+    const simulatedFace = isIndian ? [1.0, 2.0, 5.0, 10.0][hash % 4] : 0.08;
+    const simulatedROCE = ((hash % 25) + 5).toFixed(1) + '%';
+    const simulatedROE = ((hash % 20) + 4).toFixed(1) + '%';
     
     const simulatedDesc = `${name || cleanKey} is a publicly traded enterprise listed on the ${exchange}. The firm focuses on operations in its sector, contributing to global markets, and is tracked as part of our stock price monitoring index.`;
     
@@ -805,6 +854,10 @@ function getCompanyDetails(symbol, name) {
         shares: simulatedShares,
         pe: simulatedPE,
         yield: simulatedYield,
+        book: simulatedBook,
+        face: simulatedFace,
+        roce: simulatedROCE,
+        roe: simulatedROE,
         desc: simulatedDesc
     };
 }
@@ -847,6 +900,11 @@ function showCompanyDetailsModal() {
     
     modalPrevClose.textContent = data.prevClose ? formatINR(data.prevClose) : 'N/A';
     modalCurrentPrice.textContent = data.price ? formatINR(data.price) : 'N/A';
+    
+    modalBookValue.textContent = formatINR(details.book);
+    modalFaceValue.textContent = formatINR(details.face);
+    modalRoce.textContent = details.roce;
+    modalRoe.textContent = details.roe;
     modalCompanyDesc.textContent = details.desc;
     
     companyModal.classList.remove('hidden');
