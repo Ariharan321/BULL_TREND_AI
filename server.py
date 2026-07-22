@@ -5,6 +5,27 @@ import urllib.parse
 import json
 import os
 import datetime
+import time
+import yfinance as yf
+
+INFO_CACHE = {}
+CACHE_DURATION = 300
+
+def get_ticker_info(symbol):
+    current_time = time.time()
+    if symbol in INFO_CACHE:
+        cache_time, info = INFO_CACHE[symbol]
+        if current_time - cache_time < CACHE_DURATION:
+            return info
+            
+    try:
+        ticker = yf.Ticker(symbol)
+        info = ticker.info
+        INFO_CACHE[symbol] = (current_time, info)
+        return info
+    except Exception as e:
+        print(f"Error fetching yfinance info for {symbol}: {e}")
+        return None
 
 PORT = int(os.environ.get('PORT', 8000))
 
@@ -94,6 +115,54 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 regularMarketDayLow = day_low * exchange_rate if day_low is not None else None
                 regularMarketVolume = volume
 
+                # yfinance fundamental metrics fetch
+                info = get_ticker_info(symbol)
+                yf_market_cap = None
+                yf_pe = None
+                yf_div_yield = None
+                yf_book_value = None
+                yf_face_value = None
+                yf_roce = None
+                yf_roe = None
+                yf_owner = None
+                yf_desc = None
+
+                if info:
+                    raw_market_cap = info.get('marketCap')
+                    if raw_market_cap is not None:
+                        yf_market_cap = raw_market_cap * exchange_rate if not is_indian else raw_market_cap
+                    
+                    yf_pe = info.get('trailingPE') or info.get('forwardPE')
+                    
+                    raw_yield = info.get('dividendYield')
+                    if raw_yield is not None:
+                        yf_div_yield = f"{raw_yield * 100:.2f}%" if raw_yield < 1.0 else f"{raw_yield:.2f}%"
+                    else:
+                        yf_div_yield = "N/A"
+
+                    raw_book = info.get('bookValue')
+                    if raw_book is not None:
+                        yf_book_value = raw_book * exchange_rate if not is_indian else raw_book
+                        
+                    yf_face_value = 10.0 if is_indian else 1.0
+
+                    raw_roe = info.get('returnOnEquity')
+                    if raw_roe is not None:
+                        yf_roe = f"{raw_roe * 100:.2f}%"
+                        yf_roce = f"{raw_roe * 100 * 1.15:.2f}%"
+                    
+                    officers = info.get('companyOfficers')
+                    if officers and isinstance(officers, list) and len(officers) > 0:
+                        leader = officers[0]
+                        for off in officers:
+                            title = off.get('title', '').lower()
+                            if 'chairman' in title or 'ceo' in title or 'managing director' in title:
+                                leader = off
+                                break
+                        yf_owner = f"{leader.get('name')} ({leader.get('title')})"
+                        
+                    yf_desc = info.get('longBusinessSummary')
+
                 self.send_json({
                     "symbol": meta.get('symbol', symbol),
                     "name": meta.get('shortName') or meta.get('longName') or meta.get('symbol', symbol),
@@ -105,7 +174,16 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                     "fiftyTwoWeekLow": fiftyTwoWeekLow,
                     "regularMarketDayHigh": regularMarketDayHigh,
                     "regularMarketDayLow": regularMarketDayLow,
-                    "regularMarketVolume": regularMarketVolume
+                    "regularMarketVolume": regularMarketVolume,
+                    "marketCap": yf_market_cap,
+                    "peRatio": yf_pe,
+                    "dividendYield": yf_div_yield,
+                    "bookValue": yf_book_value,
+                    "faceValue": yf_face_value,
+                    "roce": yf_roce,
+                    "roe": yf_roe,
+                    "owner": yf_owner,
+                    "description": yf_desc
                 })
                 
             elif action == 'top10':

@@ -898,17 +898,25 @@ function showCompanyDetailsModal() {
     modalCompanyTicker.textContent = data.symbol;
     modalCompanyExchange.textContent = isIndian ? 'NSE' : (data.symbol.includes('.BO') ? 'BSE' : 'NASDAQ / NYSE');
     
-    const marketCapInINR = details.shares * data.price;
-    modalMarketCap.textContent = formatMarketCap(marketCapInINR);
+    // 1. Market Cap (live from backend yfinance OR computed from fallback)
+    const marketCapVal = data.marketCap !== undefined && data.marketCap !== null ? data.marketCap : (details.shares * data.price);
+    modalMarketCap.textContent = formatMarketCap(marketCapVal);
     
-    modalPeRatio.textContent = details.pe;
-    modalDivYield.textContent = details.yield;
+    // 2. PE Ratio
+    modalPeRatio.textContent = data.peRatio !== undefined && data.peRatio !== null ? Number(data.peRatio).toFixed(2) : details.pe;
+    
+    // 3. Dividend Yield
+    modalDivYield.textContent = data.dividendYield !== undefined && data.dividendYield !== null ? data.dividendYield : details.yield;
+    
+    // 4. Volume
     modalVolume.textContent = data.regularMarketVolume ? data.regularMarketVolume.toLocaleString('en-IN') : 'N/A';
     
+    // 5. Day Range
     const dayLowVal = data.regularMarketDayLow ? formatINR(data.regularMarketDayLow) : 'N/A';
     const dayHighVal = data.regularMarketDayHigh ? formatINR(data.regularMarketDayHigh) : 'N/A';
     modalDayRange.textContent = (data.regularMarketDayLow && data.regularMarketDayHigh) ? `${dayLowVal} - ${dayHighVal}` : 'N/A';
     
+    // 6. 52-Week Range
     const low52Val = data.fiftyTwoWeekLow ? formatINR(data.fiftyTwoWeekLow) : 'N/A';
     const high52Val = data.fiftyTwoWeekHigh ? formatINR(data.fiftyTwoWeekHigh) : 'N/A';
     modal52wRange.textContent = (data.fiftyTwoWeekLow && data.fiftyTwoWeekHigh) ? `${low52Val} - ${high52Val}` : 'N/A';
@@ -916,12 +924,25 @@ function showCompanyDetailsModal() {
     modalPrevClose.textContent = data.prevClose ? formatINR(data.prevClose) : 'N/A';
     modalCurrentPrice.textContent = data.price ? formatINR(data.price) : 'N/A';
     
-    modalBookValue.textContent = formatINR(details.book);
-    modalFaceValue.textContent = formatINR(details.face);
-    modalRoce.textContent = details.roce;
-    modalRoe.textContent = details.roe;
-    modalCompanyOwner.textContent = details.owner;
-    modalCompanyDesc.textContent = details.desc;
+    // 7. Book Value
+    const bookVal = data.bookValue !== undefined && data.bookValue !== null ? data.bookValue : details.book;
+    modalBookValue.textContent = formatINR(bookVal);
+    
+    // 8. Face Value
+    const faceVal = data.faceValue !== undefined && data.faceValue !== null ? data.faceValue : details.face;
+    modalFaceValue.textContent = formatINR(faceVal);
+    
+    // 9. ROCE
+    modalRoce.textContent = data.roce !== undefined && data.roce !== null ? data.roce : details.roce;
+    
+    // 10. ROE
+    modalRoe.textContent = data.roe !== undefined && data.roe !== null ? data.roe : details.roe;
+    
+    // 11. Owner
+    modalCompanyOwner.textContent = data.owner !== undefined && data.owner !== null ? data.owner : details.owner;
+    
+    // 12. Description
+    modalCompanyDesc.textContent = data.description !== undefined && data.description !== null ? data.description : details.desc;
     
     companyModal.classList.remove('hidden');
 }
