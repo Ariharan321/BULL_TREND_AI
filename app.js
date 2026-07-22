@@ -544,10 +544,36 @@ symbolInput.addEventListener('input', () => {
     }
     
     // 1. Get instant matches from our local popular stocks database
-    const localMatches = POPULAR_STOCKS.filter(item => 
-        item.symbol.toLowerCase().includes(query) || 
-        item.name.toLowerCase().includes(query)
-    );
+    let localMatches = [];
+    if (query.length === 1) {
+        // For single-letter queries, ONLY return matches where the symbol or any word in the name starts with the letter.
+        // This prevents irrelevant matches (e.g. typing 'a' shouldn't return 'Reliance' or 'TCS' just because they contain 'a').
+        localMatches = POPULAR_STOCKS.filter(item => 
+            item.symbol.toLowerCase().startsWith(query) || 
+            item.name.toLowerCase().startsWith(query) ||
+            item.name.toLowerCase().split(' ').some(word => word.startsWith(query))
+        );
+    } else {
+        // For longer queries, rank matches: StartsWith Symbol -> StartsWith Name/Word -> Contains
+        const startsWithSymbol = [];
+        const startsWithName = [];
+        const containsMatches = [];
+        
+        POPULAR_STOCKS.forEach(item => {
+            const sym = item.symbol.toLowerCase();
+            const name = item.name.toLowerCase();
+            
+            if (sym.startsWith(query)) {
+                startsWithSymbol.push(item);
+            } else if (name.startsWith(query) || name.split(' ').some(word => word.startsWith(query))) {
+                startsWithName.push(item);
+            } else if (sym.includes(query) || name.includes(query)) {
+                containsMatches.push(item);
+            }
+        });
+        
+        localMatches = [...startsWithSymbol, ...startsWithName, ...containsMatches];
+    }
     
     // Render local matches instantly to eliminate any lag!
     renderSuggestions(localMatches.slice(0, 6));
@@ -570,10 +596,13 @@ symbolInput.addEventListener('input', () => {
             const merged = [...localMatches];
             const seenSymbols = new Set(merged.map(item => item.symbol.toLowerCase()));
             
+            // Clean/filter backend results to follow the same relevance rules
             results.forEach(item => {
-                if (!seenSymbols.has(item.symbol.toLowerCase())) {
+                const sym = item.symbol.toLowerCase();
+                const name = item.name.toLowerCase();
+                if (!seenSymbols.has(sym)) {
                     merged.push(item);
-                    seenSymbols.add(item.symbol.toLowerCase());
+                    seenSymbols.add(sym);
                 }
             });
             
