@@ -56,6 +56,12 @@ exports.handler = async function(event, context) {
             
             metaPrice *= exchangeRate;
             metaPrevClose *= exchangeRate;
+
+            let fiftyTwoWeekHigh = result.meta.fiftyTwoWeekHigh ? result.meta.fiftyTwoWeekHigh * exchangeRate : null;
+            let fiftyTwoWeekLow = result.meta.fiftyTwoWeekLow ? result.meta.fiftyTwoWeekLow * exchangeRate : null;
+            let regularMarketDayHigh = result.meta.regularMarketDayHigh ? result.meta.regularMarketDayHigh * exchangeRate : null;
+            let regularMarketDayLow = result.meta.regularMarketDayLow ? result.meta.regularMarketDayLow * exchangeRate : null;
+            let regularMarketVolume = result.meta.regularMarketVolume || null;
             
             return {
                 statusCode: 200,
@@ -66,7 +72,12 @@ exports.handler = async function(event, context) {
                     price: metaPrice,
                     prevClose: metaPrevClose,
                     labels,
-                    prices
+                    prices,
+                    fiftyTwoWeekHigh,
+                    fiftyTwoWeekLow,
+                    regularMarketDayHigh,
+                    regularMarketDayLow,
+                    regularMarketVolume
                 })
             };
         } 

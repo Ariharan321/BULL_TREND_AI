@@ -95,6 +95,10 @@
                                     <svg id="trend-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                                     <span id="change-percent">--%</span>
                                 </div>
+                                <button id="know-more-btn" class="know-more-btn hidden">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    Know More
+                                </button>
                             </div>
                             <p class="last-updated" id="last-updated">Last updated: Just now</p>
                         </div>
@@ -259,6 +263,62 @@
                 <button id="submit-signup-btn" class="auth-btn-primary">Create Account</button>
                 <p class="auth-footer-text">Already have an account? <span id="switch-to-login">Log In</span></p>
                 <a class="auth-guest-link auth-guest-alt">Continue as Guest</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Details Modal Overlay -->
+    <div id="company-details-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel animate-scale">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2 id="modal-company-name">Reliance Industries Ltd</h2>
+                    <div class="modal-tags">
+                        <span id="modal-company-ticker" class="ticker">RELIANCE.NS</span>
+                        <span id="modal-company-exchange" class="exchange-tag">NSE</span>
+                    </div>
+                </div>
+                <button id="modal-close-btn" class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-label">Market Capitalization</span>
+                        <span id="modal-market-cap" class="metric-value">₹ --</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">P/E Ratio (TTM)</span>
+                        <span id="modal-pe-ratio" class="metric-value">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Dividend Yield</span>
+                        <span id="modal-div-yield" class="metric-value">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Volume (24h)</span>
+                        <span id="modal-volume" class="metric-value">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Day Range</span>
+                        <span id="modal-day-range" class="metric-value">₹ -- - ₹ --</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">52-Week Range</span>
+                        <span id="modal-52w-range" class="metric-value">₹ -- - ₹ --</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Previous Close</span>
+                        <span id="modal-prev-close" class="metric-value">₹ --</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Current Price</span>
+                        <span id="modal-current-price" class="metric-value">₹ --</span>
+                    </div>
+                </div>
+                <div class="modal-description-section">
+                    <h3>Company Overview</h3>
+                    <p id="modal-company-desc" class="company-desc-text">Loading details...</p>
+                </div>
             </div>
         </div>
     </div>

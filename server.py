@@ -82,13 +82,30 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 meta_price = (meta.get('regularMarketPrice') or prices[-1]) * exchange_rate
                 meta_prev_close = (meta.get('chartPreviousClose') or meta.get('previousClose') or prices[0]) * exchange_rate
                 
+                high_52 = meta.get('fiftyTwoWeekHigh')
+                low_52 = meta.get('fiftyTwoWeekLow')
+                day_high = meta.get('regularMarketDayHigh')
+                day_low = meta.get('regularMarketDayLow')
+                volume = meta.get('regularMarketVolume')
+
+                fiftyTwoWeekHigh = high_52 * exchange_rate if high_52 is not None else None
+                fiftyTwoWeekLow = low_52 * exchange_rate if low_52 is not None else None
+                regularMarketDayHigh = day_high * exchange_rate if day_high is not None else None
+                regularMarketDayLow = day_low * exchange_rate if day_low is not None else None
+                regularMarketVolume = volume
+
                 self.send_json({
                     "symbol": meta.get('symbol', symbol),
                     "name": meta.get('shortName') or meta.get('longName') or meta.get('symbol', symbol),
                     "price": meta_price,
                     "prevClose": meta_prev_close,
                     "labels": labels,
-                    "prices": prices
+                    "prices": prices,
+                    "fiftyTwoWeekHigh": fiftyTwoWeekHigh,
+                    "fiftyTwoWeekLow": fiftyTwoWeekLow,
+                    "regularMarketDayHigh": regularMarketDayHigh,
+                    "regularMarketDayLow": regularMarketDayLow,
+                    "regularMarketVolume": regularMarketVolume
                 })
                 
             elif action == 'top10':
