@@ -22,9 +22,7 @@ body {
     color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
-    background: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%),
-                var(--bg-darker);
+    background: url('dashboard-bg.jpg') no-repeat center center/cover fixed;
 }
 
 .glass-panel {
