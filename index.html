@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bull Trend AI | Live Indian & US Stock Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css?v=2.0.1">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar glass-panel">
+            <div class="logo">
+                <div class="logo-container">
+                    <img src="logo.png" alt="Bull Trend AI Logo" class="logo-img">
+                </div>
+                <h2>Bull Trend <span class="highlight">AI</span></h2>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-target="view-dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-target="view-alerts">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    Alerts
+                </a>
+                <a href="#" class="nav-item ai-glow" data-target="view-predict">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path><path d="M16 12L12 8l-4 4"></path></svg>
+                    AI Predict
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>Live Market Data</p>
+                <div class="status-indicator">
+                    <div class="dot pulsing"></div>
+                    <span>Connected</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="search-container glass-panel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="symbol-input" placeholder="Search by name or symbol (e.g. Sun Pharma, Apple)">
+                    <button id="search-btn" class="btn-primary">Track</button>
+                </div>
+                
+                <div id="header-auth-buttons" class="header-auth-buttons hidden">
+                    <button id="header-login-btn" class="btn-auth-box">Login</button>
+                    <button id="header-signup-btn" class="btn-auth-box outline">Sign Up</button>
+                </div>
+                <div id="header-user-profile" class="user-profile-container hidden">
+                    <div class="user-profile-trigger" id="profile-menu-trigger">
+                        <div class="avatar" id="header-avatar" style="width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></div>
+                        <span id="user-display-name" class="username-tag">Guest</span>
+                        <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; opacity: 0.7;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="profile-dropdown-menu hidden" id="profile-dropdown-menu">
+                        <div class="dropdown-profile-header" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px;">
+                            <div class="avatar" id="dropdown-avatar" style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 2px solid var(--primary); flex-shrink: 0;"></div>
+                            <div class="dropdown-profile-info" style="display: flex; flex-direction: column; overflow: hidden;">
+                                <div id="dropdown-user-name" style="font-weight: 600; color: var(--text-main); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Guest</div>
+                                <div id="dropdown-user-email" style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">guest@example.com</div>
+                            </div>
+                        </div>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item" data-action="profile">View Profile</a>
+                        <a href="#" class="dropdown-item" data-action="edit-profile">Edit Profile</a>
+                        <a href="#" class="dropdown-item" data-action="profile-pic">Change Profile Picture</a>
+                        <a href="#" class="dropdown-item" data-action="password">Change Password</a>
+                        <a href="#" class="dropdown-item" data-action="notifications">Notification Settings</a>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item logout-item" id="logout-btn-dropdown">Logout</a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- VIEWS -->
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view-section active">
+                <!-- Live Stock Ticker Banner -->
+                <div class="ticker-banner glass-panel" id="live-stock-ticker">
+                    <div class="ticker-wrap">
+                        <div class="ticker-content" id="ticker-items-container">
+                            <div style="padding: 0 20px; color: var(--text-muted); font-size: 0.85rem;">Initializing live stock ticker...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    
+                    <!-- Top 10 Stocks Sidebar -->
+                    <div class="card top10-card glass-panel">
+                        <h3>Top 10 Movers</h3>
+                        <div class="top10-list" id="top10-list">
+                            <div class="loader-small"></div>
+                        </div>
+                    </div>
+
+                    <div class="main-chart-area">
+                        <!-- Price Card -->
+                        <div class="card price-card glass-panel">
+                            <div class="card-header">
+                                <h3 id="stock-name">Reliance Industries</h3>
+                                <span class="ticker" id="stock-ticker">RELIANCE.NS</span>
+                            </div>
+                            <div class="price-container">
+                                <h1 id="current-price">₹ --</h1>
+                                <div class="price-change positive" id="price-change">
+                                    <svg id="trend-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                    <span id="change-percent">--%</span>
+                                </div>
+                            </div>
+                            <p class="last-updated" id="last-updated">Last updated: Just now</p>
+                        </div>
+
+                        <!-- Chart Card -->
+                        <div class="card chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3>Price History (Intraday)</h3>
+                                <div class="time-filters">
+                                    <button class="filter-btn active">1D</button>
+                                </div>
+                            </div>
+                            <div class="chart-container" style="position: relative; height: 350px; width: 100%">
+                                <canvas id="stockChart"></canvas>
+                                <div id="chart-loader" class="loader-overlay hidden">
+                                    <div class="spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Watchlist Card -->
+                        <div class="card watchlist-card glass-panel" style="margin-top: 24px;">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3>My Watchlist</h3>
+                                <span id="market-status-container" style="font-size: 0.9rem; color: var(--text-muted); display: none;">
+                                    Market Status: <span id="market-status" style="font-weight: 600;">--</span>
+                                </span>
+                            </div>
+                            
+                            <!-- Guest State Watchlist Prompt -->
+                            <div id="watchlist-auth-prompt" class="watchlist-empty-state" style="text-align: center; padding: 30px 20px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; opacity: 0.7;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                <p style="color: var(--text-muted); font-size: 0.95rem;">Log in to add stocks to your watchlist and track real-time changes.</p>
+                            </div>
+                            
+                            <!-- Logged In Watchlist Grid -->
+                            <div id="watchlist-grid" class="watchlist-grid hidden">
+                                <!-- Dynamically populated watchlist items -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="data-attribution">
+                    Powered by Yahoo Finance API
+                </div>
+            </div>
+
+            <!-- Alerts View -->
+            <div id="view-alerts" class="view-section">
+                <div class="alerts-layout">
+                    <!-- Left: Create Alert Form -->
+                    <div class="card alert-card glass-panel">
+                        <h3>Set Price Alert</h3>
+                        <p class="subtitle">Get notified when target is reached for <span class="highlight" id="alert-ticker-name">RELIANCE</span></p>
+                        
+                        <div class="alert-form">
+                            <div class="input-group">
+                                <label>Target Price (₹)</label>
+                                <input type="number" id="alert-price" placeholder="e.g. 3000">
+                            </div>
+                            <div class="input-group">
+                                <label>Condition</label>
+                                <select id="alert-condition">
+                                    <option value="above">Goes Above</option>
+                                    <option value="below">Drops Below</option>
+                                    <option value="equals">Equals To</option>
+                                </select>
+                            </div>
+                            <div class="input-group" id="email-alert-group">
+                                <label>Email Address</label>
+                                <input type="email" id="alert-email" placeholder="Enter your email address">
+                                <span id="email-helper-text" class="helper-text hidden">Alerts will be sent to your registered email.</span>
+                                <div style="margin-top: 8px;">
+                                    <a id="use-diff-email-btn" class="btn-link hidden">Use Different Email</a>
+                                </div>
+                            </div>
+                            <button id="set-alert-btn" class="btn-primary full-width">Create Alert</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Alert History Panel -->
+                    <div class="card alert-history-card glass-panel">
+                        <div class="history-header" style="margin-bottom: 20px;">
+                            <h3>Alert History & Logs</h3>
+                            <div class="history-controls" style="display: flex; gap: 12px; margin-top: 12px; align-items: center;">
+                                <div class="search-input-wrapper">
+                                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <input type="text" id="alert-search" placeholder="Search stock...">
+                                </div>
+                                <div class="custom-dropdown" id="status-filter-dropdown">
+                                    <div class="custom-dropdown-trigger" id="status-filter-trigger">
+                                        <span id="status-filter-label">All Statuses</span>
+                                        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                    </div>
+                                    <div class="custom-dropdown-options hidden" id="status-filter-options">
+                                        <div class="custom-dropdown-option active" data-value="all">All Statuses</div>
+                                        <div class="custom-dropdown-option" data-value="pending">Pending</div>
+                                        <div class="custom-dropdown-option" data-value="triggered">Triggered</div>
+                                        <div class="custom-dropdown-option" data-value="cancelled">Cancelled</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Guest State Alerts Prompt -->
+                        <div id="alerts-auth-prompt" class="watchlist-empty-state" style="text-align: center; padding: 40px 20px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; opacity: 0.7;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Log in to view your alert history and active configurations.</p>
+                        </div>
+                        
+                        <!-- Logged In Alert History List -->
+                        <div id="alert-history-list" class="alert-history-list hidden">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Predict View -->
+            <div id="view-predict" class="view-section">
+                <div class="card predict-card glass-panel" style="max-width: 800px; margin: 0 auto;">
+                    <div class="predict-header">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path><path d="M16 12L12 8l-4 4"></path></svg>
+                        <h2>AI Technical Analysis</h2>
+                    </div>
+                    <p class="subtitle">Run advanced pattern recognition and momentum analysis for <span class="highlight" id="ai-ticker-name">RELIANCE</span></p>
+                    
+                    <div class="predict-actions">
+                        <button id="run-ai-btn" class="btn-primary" style="font-size: 1.1rem; padding: 12px 24px;">
+                            Run Analysis Now
+                        </button>
+                    </div>
+
+                    <div id="ai-results" class="ai-results hidden">
+                        <div class="analysis-grid">
+                            <div class="analysis-box">
+                                <h4>Momentum (RSI)</h4>
+                                <div class="progress-bar"><div class="fill" id="ai-rsi-fill"></div></div>
+                                <span class="result-text" id="ai-rsi-text">Analyzing...</span>
+                            </div>
+                            <div class="analysis-box">
+                                <h4>Trend (MACD)</h4>
+                                <div class="progress-bar"><div class="fill" id="ai-macd-fill"></div></div>
+                                <span class="result-text" id="ai-macd-text">Analyzing...</span>
+                            </div>
+                            <div class="analysis-box">
+                                <h4>Volatility</h4>
+                                <div class="progress-bar"><div class="fill" id="ai-vol-fill"></div></div>
+                                <span class="result-text" id="ai-vol-text">Analyzing...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="final-verdict">
+                            <h3>AI Consensus: <span id="ai-verdict" class="highlight">BULLISH</span></h3>
+                            <p>Projected 24H Target: <strong id="ai-target">₹ --</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="toast-container" class="toast-container"></div>
+        </main>
+    </div>
+
+    <!-- Authentication Overlay -->
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <!-- Back Button -->
+            <button id="auth-back-btn" class="auth-back-btn hidden" title="Back">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+
+            <!-- Brand Logo -->
+            <div class="auth-logo">
+                <img src="logo.png" alt="Bull Trend AI Logo">
+            </div>
+            <h2>Bull Trend <span class="highlight">AI</span></h2>
+            <p class="auth-subtitle" id="auth-card-subtitle">Elevate Your Trading with Real-time Insights & AI Predictions</p>
+
+            <!-- 1. Selection Screen -->
+            <div id="auth-selection-screen" class="auth-screen">
+                <div class="auth-btn-group">
+                    <button id="select-login-btn" class="auth-btn-primary">Log In</button>
+                    <button id="select-signup-btn" class="auth-btn-secondary">Sign Up</button>
+                </div>
+                <a id="select-guest-link" class="auth-guest-link">Continue as Guest</a>
+            </div>
+
+            <!-- 2. Login Screen -->
+            <div id="auth-login-screen" class="auth-screen hidden">
+                <div class="auth-input-group">
+                    <label for="login-username">Username or Email</label>
+                    <input type="text" id="login-username" class="auth-input" placeholder="Enter your username">
+                </div>
+                <div class="auth-input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" class="auth-input" placeholder="••••••••">
+                </div>
+                <button id="submit-login-btn" class="auth-btn-primary">Log In</button>
+                <p class="auth-footer-text">Don't have an account? <span id="switch-to-signup">Sign Up</span></p>
+                <a class="auth-guest-link auth-guest-alt">Continue as Guest</a>
+            </div>
+
+            <!-- 3. Sign Up Screen -->
+            <div id="auth-signup-screen" class="auth-screen hidden">
+                <div class="auth-input-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" class="auth-input" placeholder="e.g. John Doe">
+                </div>
+                <div class="auth-input-group">
+                    <label for="signup-username">Username or Email</label>
+                    <input type="text" id="signup-username" class="auth-input" placeholder="Enter your username">
+                </div>
+                <div class="auth-input-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" class="auth-input" placeholder="Create a password">
+                </div>
+                <div class="auth-input-group">
+                    <label for="signup-confirm-password">Confirm Password</label>
+                    <input type="password" id="signup-confirm-password" class="auth-input" placeholder="Confirm your password">
+                </div>
+                <button id="submit-signup-btn" class="auth-btn-primary">Create Account</button>
+                <p class="auth-footer-text">Already have an account? <span id="switch-to-login">Log In</span></p>
+                <a class="auth-guest-link auth-guest-alt">Continue as Guest</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile & Settings Overlay -->
+    <div id="profile-settings-overlay" class="hidden">
+        <div class="auth-card">
+            <!-- Close Button -->
+            <button id="settings-close-btn" class="auth-back-btn" style="left: auto; right: 24px;" title="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            
+            <h2 id="settings-title">My Profile</h2>
+            <p class="auth-subtitle" id="settings-subtitle">Manage your account information and preferences</p>
+            
+            <!-- 1. Profile Details Screen -->
+            <div id="settings-profile-screen" class="settings-screen hidden">
+                <div class="profile-details-layout" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                    <div style="display: flex; justify-content: center; margin-bottom: 8px;">
+                        <div class="avatar" id="settings-avatar" style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); flex-shrink: 0;"></div>
+                    </div>
+                    <div class="auth-input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="settings-profile-name" class="auth-input" readonly>
+                    </div>
+                    <div class="auth-input-group">
+                        <label>Username / Email</label>
+                        <input type="text" id="settings-profile-email" class="auth-input" readonly>
+                    </div>
+                    <div class="auth-input-group">
+                        <label>Account Created</label>
+                        <input type="text" id="settings-profile-created" class="auth-input" readonly>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 10px;">
+                        <button id="btn-to-edit-profile" class="auth-btn-primary" style="flex: 1; padding: 10px; font-size: 0.85rem;">Edit Name</button>
+                        <button id="btn-to-change-avatar" class="auth-btn-secondary" style="flex: 1; padding: 10px; font-size: 0.85rem;">Edit Picture</button>
+                    </div>
+                    <button id="btn-send-test-email" class="auth-btn-secondary full-width" style="margin-top: 12px; border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.05); color: #3b82f6; font-size: 0.9rem; padding: 10px;">🧪 Send Test Email</button>
+                </div>
+            </div>
+            
+            <!-- 1b. Edit Profile Screen -->
+            <div id="settings-edit-profile-screen" class="settings-screen hidden">
+                <div class="auth-input-group" style="margin-bottom: 16px;">
+                    <label for="edit-profile-name">Full Name</label>
+                    <input type="text" id="edit-profile-name" class="auth-input" placeholder="Enter your full name">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button id="submit-edit-profile-btn" class="auth-btn-primary" style="flex: 1;">Save Name</button>
+                    <button class="auth-btn-secondary btn-back-to-profile" style="flex: 1;">Back</button>
+                </div>
+            </div>
+            
+            <!-- 1c. Change Profile Picture Screen -->
+            <div id="settings-profile-pic-screen" class="settings-screen hidden">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%;">
+                    <div class="avatar" id="upload-avatar-preview" style="width: 90px; height: 90px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); flex-shrink: 0;"></div>
+                    
+                    <div class="file-upload-wrapper" style="width: 100%; position: relative;">
+                        <input type="file" id="profile-pic-file" accept="image/*" style="display: none;">
+                        <button id="btn-choose-file" class="auth-btn-secondary full-width" style="margin-bottom: 8px;">Choose Photo...</button>
+                        <span id="chosen-file-name" style="font-size: 0.8rem; color: var(--text-muted); display: block; text-align: center; margin-bottom: 12px;">No file chosen</span>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                        <button id="submit-profile-pic-btn" class="auth-btn-primary full-width">Upload & Save</button>
+                        <div style="display: flex; gap: 12px;">
+                            <button id="submit-delete-pic-btn" class="auth-btn-secondary" style="flex: 1; color: var(--danger); border-color: rgba(239,68,68,0.25);">Remove Photo</button>
+                            <button class="auth-btn-secondary btn-back-to-profile" style="flex: 1;">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 2. Change Password Screen -->
+            <div id="settings-password-screen" class="settings-screen hidden">
+                <div class="auth-input-group" style="margin-bottom: 12px;">
+                    <label for="password-current">Current Password</label>
+                    <input type="password" id="password-current" class="auth-input" placeholder="Enter current password">
+                </div>
+                <div class="auth-input-group" style="margin-bottom: 12px;">
+                    <label for="password-new">New Password</label>
+                    <input type="password" id="password-new" class="auth-input" placeholder="At least 4 characters">
+                </div>
+                <div class="auth-input-group" style="margin-bottom: 16px;">
+                    <label for="password-confirm">Confirm New Password</label>
+                    <input type="password" id="password-confirm" class="auth-input" placeholder="Confirm new password">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button id="submit-change-password-btn" class="auth-btn-primary" style="flex: 1;">Update Password</button>
+                    <button class="auth-btn-secondary btn-back-to-profile" style="flex: 1;">Back</button>
+                </div>
+            </div>
+            
+            <!-- 3. Notification Settings Screen -->
+            <div id="settings-notifications-screen" class="settings-screen hidden">
+                <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; text-align: left;">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <input type="checkbox" id="notify-email" checked style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary);">
+                        <label for="notify-email" style="font-size: 0.95rem; cursor: pointer;">
+                            <strong style="display: block; margin-bottom: 2px;">Email Alerts Enabled</strong>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Receive instant HTML reports when price target thresholds are reached.</span>
+                        </label>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <input type="checkbox" id="notify-sound" checked style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary);">
+                        <label for="notify-sound" style="font-size: 0.95rem; cursor: pointer;">
+                            <strong style="display: block; margin-bottom: 2px;">Audio Notifications</strong>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Play high-frequency audio tone inside the browser dashboard.</span>
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button id="submit-save-notifications-btn" class="auth-btn-primary" style="flex: 1; margin-top: 0;">Save Config</button>
+                    <button class="auth-btn-secondary btn-back-to-profile" style="flex: 1;">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js?v=2.0.3"></script>
+</body>
+</html>
