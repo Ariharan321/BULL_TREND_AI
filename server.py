@@ -102,8 +102,17 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                     raise Exception('Empty data')
                     
                 meta = result['meta']
-                meta_price = (meta.get('regularMarketPrice') or prices[-1]) * exchange_rate
-                meta_prev_close = (meta.get('chartPreviousClose') or meta.get('previousClose') or prices[0]) * exchange_rate
+                raw_price = meta.get('regularMarketPrice')
+                if raw_price is not None:
+                    meta_price = raw_price * exchange_rate
+                else:
+                    meta_price = prices[-1]
+                
+                raw_prev_close = meta.get('chartPreviousClose') or meta.get('previousClose')
+                if raw_prev_close is not None:
+                    meta_prev_close = raw_prev_close * exchange_rate
+                else:
+                    meta_prev_close = prices[0]
                 
                 high_52 = meta.get('fiftyTwoWeekHigh')
                 low_52 = meta.get('fiftyTwoWeekLow')
@@ -206,8 +215,11 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                         is_indian = '.NS' in sym or '.BO' in sym
                         rate = 1.0 if (is_indian or raw) else exchange_rate
                         
-                        price = (meta.get('regularMarketPrice') or meta.get('chartPreviousClose')) * rate
-                        prev_close = (meta.get('chartPreviousClose') or price) * rate
+                        raw_price = meta.get('regularMarketPrice') or meta.get('chartPreviousClose')
+                        raw_prev_close = meta.get('chartPreviousClose') or raw_price
+                        
+                        price = raw_price * rate if raw_price is not None else None
+                        prev_close = raw_prev_close * rate if raw_prev_close is not None else None
                         change = price - prev_close
                         pct = (change / prev_close * 100) if prev_close else 0.0
                         

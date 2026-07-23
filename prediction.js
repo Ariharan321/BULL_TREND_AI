@@ -32,6 +32,7 @@ function calculateRSI(prices, period = 14) {
   const avgGain = gains / period;
   const avgLoss = losses / period;
   
+  if (gains === 0 && losses === 0) return 50;
   if (avgLoss === 0) return 100;
   const rs = avgGain / avgLoss;
   return 100 - (100 / (1 + rs));

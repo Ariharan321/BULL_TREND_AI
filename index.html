@@ -46,6 +46,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1);"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" /><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" /><path d="m2 16 6 6" /></svg>
                     Buy / Sell
                 </a>
+                <a href="#" class="nav-item" data-target="view-about">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    About
+                </a>
             </nav>
             
             <div class="sidebar-footer">
@@ -157,8 +161,8 @@
                             </select>
                         </div>
                         <div class="input-group">
-                            <label>Mobile Number (for SMS notifications)</label>
-                            <input type="tel" id="alert-phone" placeholder="e.g. +91 98765 43210">
+                            <label>Email Address (for Email notifications)</label>
+                            <input type="email" id="alert-email" placeholder="e.g. name@example.com">
                         </div>
                         <button id="set-alert-btn" class="btn-primary full-width">Create Alert</button>
                     </div>
@@ -341,6 +345,107 @@
                     </div>
                     <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 2rem; margin-bottom: 12px; background: linear-gradient(135deg, #ffffff, var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Buy & Sell Portal</h2>
                     <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto; line-height: 1.6;">Configure trades, execute stock purchases/sales, and track your active positions.</p>
+                </div>
+            </div>
+
+            <!-- About View -->
+            <div id="view-about" class="view-section">
+                <div class="card about-card glass-panel" style="max-width: 850px; margin: 0 auto; padding: 40px;">
+                    <div style="text-align: center; margin-bottom: 35px;">
+                        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; margin-bottom: 12px; background: linear-gradient(135deg, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.2));">About Bull Trend AI</h2>
+                        <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+                            Your intelligent terminal for financial market analysis. Bridging the gap between raw data and actionable predictive strategies.
+                        </p>
+                    </div>
+
+                    <div class="about-grid">
+                        <div class="about-feature-card">
+                            <div class="feature-icon">📈</div>
+                            <h4>Real-Time Tracking</h4>
+                            <p>Stream real-time price feeds for NSE, BSE, and US markets with automatic INR currency conversion.</p>
+                        </div>
+                        <div class="about-feature-card">
+                            <div class="feature-icon">🤖</div>
+                            <h4>AI Price Prediction</h4>
+                            <p>Leverage technical indicators like RSI and moving averages to analyze trends and get clear trade recommendations.</p>
+                        </div>
+                        <div class="about-feature-card">
+                            <div class="feature-icon">🔔</div>
+                            <h4>Smart Alert System</h4>
+                            <p>Configure custom price thresholds and receive simulated Email and visual toast notifications instantly when triggered.</p>
+                        </div>
+                        <div class="about-feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h4>Interactive Charts</h4>
+                            <p>Visualize intraday movements using high-performance Chart.js integration, synced directly to live API feeds.</p>
+                        </div>
+                    </div>
+
+                    <div class="about-divider"></div>
+
+                    <div class="about-details-section">
+                        <h3>How It Works</h3>
+                        <div class="about-steps">
+                            <div class="about-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content">
+                                    <h5>Data Ingestion</h5>
+                                    <p>Our serverless backend queries live endpoints directly from Yahoo Finance API, bypassing CORS locks securely.</p>
+                                </div>
+                            </div>
+                            <div class="about-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content">
+                                    <h5>Signal Analytics</h5>
+                                    <p>Algorithms compute key technical indicator thresholds to evaluate momentum patterns (RSI, ROCE, ROE).</p>
+                                </div>
+                            </div>
+                            <div class="about-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content">
+                                    <h5>Alert Execution</h5>
+                                    <p>The client monitors real-time price fluctuations and executes Email alerts if values cross the set constraints.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="about-divider"></div>
+
+                    <div class="about-mission-section" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; margin-bottom: 10px;">
+                        <div>
+                            <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; margin-bottom: 12px; color: var(--text-main);">Our Vision</h3>
+                            <p style="font-size: 0.9rem; line-height: 1.6; color: var(--text-muted);">
+                                We believe institutional-grade analytical tools should be accessible to everyone. By integrating real-time market data with dynamic technical indicators, we simplify trend monitoring for traders around the globe.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; margin-bottom: 12px; color: var(--text-main);">Disclaimer</h3>
+                            <p style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); padding: 12px; border-radius: 8px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1);">
+                                ⚠️ <strong>Market Risk Warning:</strong> All data, analysis, and recommendations are simulated and provided for informational purposes only. None of the technical indicators represent financial advice. Always perform your own research before trading.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="about-divider"></div>
+
+                    <div class="about-tech-stack">
+                        <h3>Technical Architecture</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">HTML5 / CSS3</span>
+                            <span class="tech-tag">JavaScript ES6</span>
+                            <span class="tech-tag">Chart.js</span>
+                            <span class="tech-tag">Python http.server</span>
+                            <span class="tech-tag">yfinance API</span>
+                            <span class="tech-tag">Deployment Platform</span>
+                        </div>
+                    </div>
+
+                    <div class="about-divider"></div>
+
+                    <div style="text-align: center; font-size: 1rem; color: var(--text-muted); margin-top: 10px; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.5px;">
+                        Build version 1.2.0 • Powered by <strong>BULL TREND AI</strong>
+                    </div>
                 </div>
             </div>
 

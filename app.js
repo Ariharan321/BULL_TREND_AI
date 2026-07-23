@@ -39,7 +39,7 @@ const top10ListEl = document.getElementById('top10-list');
 // Alert Elements
 const alertPriceInput = document.getElementById('alert-price');
 const alertConditionSelect = document.getElementById('alert-condition');
-const alertPhoneInput = document.getElementById('alert-phone');
+const alertEmailInput = document.getElementById('alert-email');
 const setAlertBtn = document.getElementById('set-alert-btn');
 const activeAlertContainer = document.getElementById('active-alert-container');
 const activeAlertText = document.getElementById('active-alert-text');
@@ -188,7 +188,7 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         updateDashboardUI(data.symbol.replace('.NS', ''), data.name, currentPrice, changeValue, changePercent);
         
         if (!isBackgroundUpdate && !isInitialLoad) {
-            symbolInput.value = data.name || data.symbol;
+            symbolInput.value = '';
         }
         
         if (data.prices && data.prices.length > 0) {
@@ -488,25 +488,25 @@ document.querySelectorAll('.nav-item').forEach(item => {
 function setAlert() {
     const priceStr = alertPriceInput.value;
     const condition = alertConditionSelect.value;
-    const phone = alertPhoneInput.value.trim();
+    const email = alertEmailInput.value.trim();
     
     if (!priceStr || isNaN(priceStr)) { showToast('Please enter a valid price.', 'error'); return; }
-    if (!phone) { showToast('Please enter a mobile number for SMS notifications.', 'error'); return; }
+    if (!email) { showToast('Please enter an email address for notifications.', 'error'); return; }
     
-    // Simple regex phone validation
-    const phoneRegex = /^\+?[0-9\s\-()]{10,15}$/;
-    if (!phoneRegex.test(phone)) {
-        showToast('Please enter a valid mobile number (e.g. +91 98765 43210).', 'error');
+    // Simple regex email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast('Please enter a valid email address.', 'error');
         return;
     }
     
     const targetPrice = parseFloat(priceStr);
-    activeAlert = { price: targetPrice, condition, phone };
-    activeAlertText.innerHTML = `Alert when price goes <strong>${condition}</strong> ${formatINR(targetPrice)} (SMS to: <strong>${phone}</strong>)`;
+    activeAlert = { price: targetPrice, condition, email };
+    activeAlertText.innerHTML = `Alert when price goes <strong>${condition}</strong> ${formatINR(targetPrice)} (Email to: <strong>${email}</strong>)`;
     activeAlertContainer.classList.remove('hidden');
     alertPriceInput.value = '';
-    alertPhoneInput.value = '';
-    showToast('Alert created successfully with SMS notifications!', 'success');
+    alertEmailInput.value = '';
+    showToast('Alert created successfully with Email notifications!', 'success');
 }
 
 function clearAlert() {
@@ -528,10 +528,10 @@ function checkAlerts(currentPrice) {
         // App Notification Toast
         showToast(msg, 'alert');
         
-        // SMS Notification Simulation
-        const phone = activeAlert.phone;
-        console.log(`[SMS Gateway] Sending alert SMS to ${phone}: "${msg}"`);
-        showToast(`📱 SMS alert sent to ${phone}!`, 'success');
+        // Email Notification Simulation
+        const email = activeAlert.email;
+        console.log(`[Email Gateway] Sending alert Email to ${email}: "${msg}"`);
+        showToast(`✉️ Email alert sent to ${email}!`, 'success');
         
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
