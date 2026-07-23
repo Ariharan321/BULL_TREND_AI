@@ -226,7 +226,7 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         
         if (!isBackgroundUpdate) {
             document.querySelectorAll('.filter-btn').forEach(b => {
-                if (b.getAttribute('data-range') === 'max') {
+                if (b.getAttribute('data-range') === '2y') {
                     b.classList.add('active');
                 } else {
                     b.classList.remove('active');
@@ -825,6 +825,16 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
             const count = Math.min(filteredPrices.length, 60);
             filteredPrices = filteredPrices.slice(-count);
             filteredLabels = filteredLabels.slice(-count);
+        } else if (range === '6m') {
+            // Last 6 months (~120 trading days)
+            const count = Math.min(filteredPrices.length, 120);
+            filteredPrices = filteredPrices.slice(-count);
+            filteredLabels = filteredLabels.slice(-count);
+        } else if (range === '1y') {
+            // Last 1 year (~250 trading days)
+            const count = Math.min(filteredPrices.length, 250);
+            filteredPrices = filteredPrices.slice(-count);
+            filteredLabels = filteredLabels.slice(-count);
         }
         
         // Update the Chart
@@ -832,6 +842,46 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
         updateChart(filteredLabels, filteredPrices, changeValue >= 0);
     });
 });
+
+// Chart expand/zoom toggle
+const chartCard = document.querySelector('.chart-card');
+const expandBtn = document.getElementById('chart-expand-btn');
+if (expandBtn && chartCard) {
+    expandBtn.addEventListener('click', () => {
+        const isMaximized = chartCard.classList.toggle('maximized');
+        const iconSvg = document.getElementById('expand-icon');
+        
+        if (isMaximized) {
+            // Block page scroll
+            document.body.style.overflow = 'hidden';
+            // Set minimize SVG icon
+            iconSvg.innerHTML = `
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="10" y1="14" x2="3" y2="21"></line>
+            `;
+            expandBtn.title = "Minimize Chart";
+        } else {
+            // Restore page scroll
+            document.body.style.overflow = '';
+            // Restore expand SVG icon
+            iconSvg.innerHTML = `
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            `;
+            expandBtn.title = "Expand Chart";
+        }
+        
+        // Resize and redraw Chart.js instance to fill the fullscreen container
+        if (stockChart) {
+            stockChart.resize();
+            stockChart.update();
+        }
+    });
+}
 
 // --- AUTH STATE & TRANSITIONS ---
 const authOverlay = document.getElementById('auth-overlay');

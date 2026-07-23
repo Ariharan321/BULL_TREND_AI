@@ -429,6 +429,47 @@ body {
 .filter-btn:hover { background: rgba(255, 255, 255, 0.1); }
 .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
+.chart-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.chart-expand-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--panel-border);
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.chart-expand-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+.chart-card.maximized {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    z-index: 2000;
+    margin: 0;
+    height: calc(100vh - 32px) !important;
+    width: calc(100vw - 32px) !important;
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.chart-card.maximized .chart-container {
+    height: calc(100% - 60px) !important;
+}
+
 .hidden { display: none !important; }
 
 /* Loaders and Toasts */
