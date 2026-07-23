@@ -875,11 +875,14 @@ if (expandBtn && chartCard) {
             expandBtn.title = "Expand Chart";
         }
         
-        // Resize and redraw Chart.js instance to fill the fullscreen container
-        if (stockChart) {
-            stockChart.resize();
-            stockChart.update();
-        }
+        // Allow CSS transitions/layout flow recalculations to complete before resizing
+        setTimeout(() => {
+            if (stockChart) {
+                stockChart.resize();
+                stockChart.update();
+            }
+            window.dispatchEvent(new Event('resize'));
+        }, 150);
     });
 }
 
