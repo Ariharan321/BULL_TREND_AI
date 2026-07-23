@@ -191,6 +191,38 @@ function initChart() {
 // Format Currency
 const formatINR = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
 
+function getCurrencySymbol(currency) {
+    if (!currency) return '₹';
+    const upperCurr = currency.toUpperCase();
+    if (upperCurr === 'INR') return '₹';
+    if (upperCurr === 'USD') return '$';
+    if (upperCurr === 'EUR') return '€';
+    if (upperCurr === 'GBP' || upperCurr === 'GBP') return '£';
+    if (upperCurr === 'JPY') return '¥';
+    return currency;
+}
+
+function formatStockCurrency(price, currency = 'INR') {
+    if (!currency) return formatINR(price);
+    if (price === undefined || price === null || isNaN(price)) return 'N/A';
+    const upperCurr = currency.toUpperCase();
+    if (upperCurr === 'INR') {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(price);
+    } else if (upperCurr === 'USD') {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(price);
+    } else if (upperCurr === 'EUR') {
+        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(price);
+    } else if (upperCurr === 'GBP') {
+        return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(price);
+    } else if (upperCurr === 'GBp') {
+        return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(price / 100);
+    } else if (upperCurr === 'JPY') {
+        return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(price);
+    } else {
+        return `${currency} ${price.toFixed(2)}`;
+    }
+}
+
 // Top 10 Symbols (Mixed Indian & US Stocks)
 const TOP_10_SYMBOLS = [
     'RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'ICICIBANK.NS', 'INFY.NS', 
@@ -242,7 +274,7 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         
         activeStockDetails = data;
         knowMoreBtn.classList.remove('hidden');
-        updateDashboardUI(data.symbol.replace('.NS', ''), data.name, currentPrice, changeValue, changePercent);
+        updateDashboardUI(data.symbol.replace('.NS', ''), data.name, currentPrice, changeValue, changePercent, data.currency);
         
         if (!isBackgroundUpdate && !isInitialLoad) {
             symbolInput.value = '';
@@ -259,7 +291,7 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         }
         
         if (data.prices && data.prices.length > 0) {
-            updateChart(data.labels, data.prices, changeValue >= 0);
+            updateChart(data.labels, data.prices, changeValue >= 0, data.currency);
         }
         
         checkAlerts(currentPrice);
@@ -308,7 +340,7 @@ async function loadTop10() {
             div.innerHTML = `
                 <div class="top10-info">
                     <span class="top10-symbol" title="${stockData.shortName}">${stockData.shortName}</span>
-                    <span class="top10-price">${symbolBase} • ${formatINR(price)}</span>
+                    <span class="top10-price">${symbolBase} • ${formatStockCurrency(price, stockData.currency)}</span>
                 </div>
                 <div class="top10-trend ${isUp ? 'up' : 'down'}">
                     ${isUp ? '▲' : '▼'} ${Math.abs(pct).toFixed(2)}%
@@ -329,15 +361,17 @@ async function loadTop10() {
     }
 }
 
-function updateDashboardUI(symbol, name, price, changeVal, changePct) {
+function updateDashboardUI(symbol, name, price, changeVal, changePct, currency = 'INR') {
     stockTickerEl.textContent = symbol;
     stockNameEl.textContent = name || symbol;
     
-    currentPriceEl.textContent = formatINR(price);
+    currentPriceEl.textContent = formatStockCurrency(price, currency);
     
     const isPositive = changeVal >= 0;
     const sign = isPositive ? '+' : '';
-    changePercentEl.textContent = `${sign}${formatINR(Math.abs(changeVal)).replace('₹','₹ ')} (${sign}${changePct.toFixed(2)}%)`;
+    const formattedChange = formatStockCurrency(Math.abs(changeVal), currency);
+    const sym = getCurrencySymbol(currency);
+    changePercentEl.textContent = `${sign}${formattedChange.replace(sym, sym + ' ')} (${sign}${changePct.toFixed(2)}%)`;
     
     if (isPositive) {
         priceChangeEl.className = 'price-change positive';
@@ -350,13 +384,27 @@ function updateDashboardUI(symbol, name, price, changeVal, changePct) {
     lastUpdatedEl.textContent = `Last updated: ${new Date().toLocaleTimeString('en-IN')}`;
 }
 
-function updateChart(labels, data, isPositive) {
+function updateChart(labels, data, isPositive, currency = 'INR') {
     if (!stockChart) return;
     if (typeof stockChart.resetZoom === 'function') {
         stockChart.resetZoom('none');
     }
+    
+    const symbolChar = getCurrencySymbol(currency);
+    
     stockChart.data.labels = labels;
     stockChart.data.datasets[0].data = data;
+    stockChart.data.datasets[0].label = `Price (${symbolChar})`;
+    
+    // Update tooltip callback
+    stockChart.options.plugins.tooltip.callbacks.label = function(context) {
+        return `${symbolChar} ${context.parsed.y.toFixed(2)}`;
+    };
+    
+    // Update y-axis scale callback
+    stockChart.options.scales.y.ticks.callback = function(value) {
+        return `${symbolChar} ${value}`;
+    };
     
     const color = isPositive ? '#10b981' : '#ef4444';
     const ctx = document.getElementById('stockChart').getContext('2d');
@@ -495,7 +543,7 @@ function runAiPrediction() {
         }
         
         // Update projected target and change percent
-        targetEl.textContent = formatINR(prediction.predictedPrice);
+        targetEl.textContent = formatStockCurrency(prediction.predictedPrice, currentStockData ? currentStockData.currency : 'INR');
         const sign = prediction.expectedChange >= 0 ? '+' : '';
         expectedChangeEl.textContent = `${sign}${prediction.expectedChange.toFixed(2)}%`;
         expectedChangeEl.className = `expected-change ${prediction.direction}`;
@@ -566,20 +614,20 @@ function setAlert() {
     if (!priceStr || isNaN(priceStr)) { showToast('Please enter a valid price.', 'error'); return; }
     if (!email) { showToast('Please enter an email address for notifications.', 'error'); return; }
     
-    // Simple regex email validation
+    // Simple email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-        showToast('Please enter a valid email address.', 'error');
+        showToast('Please enter a valid email address (e.g. user@example.com).', 'error');
         return;
     }
     
     const targetPrice = parseFloat(priceStr);
-    activeAlert = { price: targetPrice, condition, email };
-    activeAlertText.innerHTML = `Alert when price goes <strong>${condition}</strong> ${formatINR(targetPrice)} (Email to: <strong>${email}</strong>)`;
+    activeAlert = { price: targetPrice, condition, email, currency: currentStockData ? currentStockData.currency : 'INR' };
+    activeAlertText.innerHTML = `Alert when price goes <strong>${condition}</strong> ${formatStockCurrency(targetPrice, activeAlert.currency)} (Email to: <strong>${email}</strong>)`;
     activeAlertContainer.classList.remove('hidden');
     alertPriceInput.value = '';
     alertEmailInput.value = '';
-    showToast('Alert created successfully with Email notifications!', 'success');
+    showToast('Alert created successfully with email notifications!', 'success');
 }
 
 function clearAlert() {
@@ -596,15 +644,36 @@ function checkAlerts(currentPrice) {
     
     if (triggered) {
         const symbolStr = stockTickerEl.textContent;
-        const msg = `🎯 TARGET HIT: ${symbolStr} is now ${formatINR(currentPrice)}`;
+        const msg = `🎯 TARGET HIT: ${symbolStr} is now ${formatStockCurrency(currentPrice, activeAlert.currency || 'INR')}`;
         
         // App Notification Toast
         showToast(msg, 'alert');
         
-        // Email Notification Simulation
+        // Email Notification Trigger
         const email = activeAlert.email;
-        console.log(`[Email Gateway] Sending alert Email to ${email}: "${msg}"`);
-        showToast(`✉️ Email alert sent to ${email}!`, 'success');
+        console.log(`[Email Gateway] Triggering alert Email to ${email}: "${msg}"`);
+        showToast(`📧 Sending email alert to ${email}...`, 'success');
+        const emailUrl = `/.netlify/functions/stock?action=send_email&to=${encodeURIComponent(email)}&subject=${encodeURIComponent('Bull Trend AI Price Alert')}&message=${encodeURIComponent(msg)}`;
+        fetch(emailUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.simulated) {
+                        showToast(`📧 Email alert simulated & logged for ${email}!`, 'success');
+                        showToast(`⚠️ Server SMTP is not configured. Real email NOT sent.`, 'warning');
+                    } else {
+                        showToast(`📧 Email alert sent successfully to ${email}!`, 'success');
+                    }
+                } else {
+                    console.error('Email server error:', data.error);
+                    showToast(`⚠️ Email alert failed: ${data.error}`, 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Failed to trigger email notification:', err);
+                showToast(`📧 Email simulated & logged locally for ${email}.`, 'success');
+                showToast(`⚠️ Server is offline/unreachable. Real email NOT sent.`, 'warning');
+            });
         
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -631,6 +700,7 @@ function showToast(message, type = 'success') {
     if (type === 'success') icon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
     else if (type === 'error') icon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
     else if (type === 'alert') icon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
+    else if (type === 'warning') icon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
     toast.innerHTML = `${icon} <span>${message}</span>`;
     toastContainer.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
@@ -999,7 +1069,7 @@ function enterDashboard(mode, username = '') {
         if (updateInterval) clearInterval(updateInterval);
         updateInterval = setInterval(() => {
             fetchStockData(currentSymbol, true);
-        }, 60000);
+        }, 5000);
     }
 }
 
@@ -1243,13 +1313,27 @@ function getCompanyDetails(symbol, name) {
     };
 }
 
-function formatMarketCap(val) {
-    if (!val) return '₹ --';
-    const croreVal = val / 10000000;
-    if (croreVal >= 100000) {
-        return `₹ ${(croreVal / 100000).toFixed(2)} Lakh Cr`;
+function formatMarketCap(val, currency = 'INR') {
+    if (!val) return '--';
+    const upperCurr = currency.toUpperCase();
+    if (upperCurr === 'INR') {
+        const croreVal = val / 10000000;
+        if (croreVal >= 100000) {
+            return `₹ ${(croreVal / 100000).toFixed(2)} Lakh Cr`;
+        } else {
+            return `₹ ${Math.round(croreVal).toLocaleString('en-IN')} Cr`;
+        }
     } else {
-        return `₹ ${Math.round(croreVal).toLocaleString('en-IN')} Cr`;
+        const symbolChar = getCurrencySymbol(currency);
+        if (val >= 1000000000000) {
+            return `${symbolChar}${(val / 1000000000000).toFixed(2)} Trillion`;
+        } else if (val >= 1000000000) {
+            return `${symbolChar}${(val / 1000000000).toFixed(2)} Billion`;
+        } else if (val >= 1000000) {
+            return `${symbolChar}${(val / 1000000).toFixed(2)} Million`;
+        } else {
+            return `${symbolChar}${val.toLocaleString('en-US')}`;
+        }
     }
 }
 
@@ -1266,7 +1350,7 @@ function showCompanyDetailsModal() {
     
     // 1. Market Cap (live from backend yfinance OR computed from fallback)
     const marketCapVal = data.marketCap !== undefined && data.marketCap !== null ? data.marketCap : (details.shares * data.price);
-    modalMarketCap.textContent = formatMarketCap(marketCapVal);
+    modalMarketCap.textContent = formatMarketCap(marketCapVal, data.currency);
     
     // 2. PE Ratio
     modalPeRatio.textContent = data.peRatio !== undefined && data.peRatio !== null ? Number(data.peRatio).toFixed(2) : details.pe;
@@ -1275,28 +1359,28 @@ function showCompanyDetailsModal() {
     modalDivYield.textContent = data.dividendYield !== undefined && data.dividendYield !== null ? data.dividendYield : details.yield;
     
     // 4. Volume
-    modalVolume.textContent = data.regularMarketVolume ? data.regularMarketVolume.toLocaleString('en-IN') : 'N/A';
+    modalVolume.textContent = data.regularMarketVolume ? data.regularMarketVolume.toLocaleString(data.currency === 'INR' ? 'en-IN' : 'en-US') : 'N/A';
     
     // 5. Day Range
-    const dayLowVal = data.regularMarketDayLow ? formatINR(data.regularMarketDayLow) : 'N/A';
-    const dayHighVal = data.regularMarketDayHigh ? formatINR(data.regularMarketDayHigh) : 'N/A';
+    const dayLowVal = data.regularMarketDayLow ? formatStockCurrency(data.regularMarketDayLow, data.currency) : 'N/A';
+    const dayHighVal = data.regularMarketDayHigh ? formatStockCurrency(data.regularMarketDayHigh, data.currency) : 'N/A';
     modalDayRange.textContent = (data.regularMarketDayLow && data.regularMarketDayHigh) ? `${dayLowVal} - ${dayHighVal}` : 'N/A';
     
     // 6. 52-Week Range
-    const low52Val = data.fiftyTwoWeekLow ? formatINR(data.fiftyTwoWeekLow) : 'N/A';
-    const high52Val = data.fiftyTwoWeekHigh ? formatINR(data.fiftyTwoWeekHigh) : 'N/A';
+    const low52Val = data.fiftyTwoWeekLow ? formatStockCurrency(data.fiftyTwoWeekLow, data.currency) : 'N/A';
+    const high52Val = data.fiftyTwoWeekHigh ? formatStockCurrency(data.fiftyTwoWeekHigh, data.currency) : 'N/A';
     modal52wRange.textContent = (data.fiftyTwoWeekLow && data.fiftyTwoWeekHigh) ? `${low52Val} - ${high52Val}` : 'N/A';
     
-    modalPrevClose.textContent = data.prevClose ? formatINR(data.prevClose) : 'N/A';
-    modalCurrentPrice.textContent = data.price ? formatINR(data.price) : 'N/A';
+    modalPrevClose.textContent = data.prevClose ? formatStockCurrency(data.prevClose, data.currency) : 'N/A';
+    modalCurrentPrice.textContent = data.price ? formatStockCurrency(data.price, data.currency) : 'N/A';
     
     // 7. Book Value
     const bookVal = data.bookValue !== undefined && data.bookValue !== null ? data.bookValue : details.book;
-    modalBookValue.textContent = formatINR(bookVal);
+    modalBookValue.textContent = formatStockCurrency(bookVal, data.currency);
     
     // 8. Face Value
     const faceVal = data.faceValue !== undefined && data.faceValue !== null ? data.faceValue : details.face;
-    modalFaceValue.textContent = formatINR(faceVal);
+    modalFaceValue.textContent = formatStockCurrency(faceVal, data.currency);
     
     // 9. ROCE
     modalRoce.textContent = data.roce !== undefined && data.roce !== null ? data.roce : details.roce;
@@ -1492,7 +1576,7 @@ function createMoverRow(stock) {
             <span class="mover-symbol">${symbolBase} • ${stock.industry}</span>
         </div>
         <div class="mover-trend">
-            <span class="mover-price">${formatINR(stock.price)}</span>
+            <span class="mover-price">${formatStockCurrency(stock.price, stock.currency)}</span>
             <span class="mover-pct ${isUp ? 'up' : 'down'}">
                 ${isUp ? '▲' : '▼'} ${pctSign}${stock.percent_change.toFixed(2)}%
             </span>
@@ -1618,7 +1702,7 @@ function createModalStockRow(stock) {
             <span class="mover-symbol" style="font-size:0.75rem;">${symbolBase}</span>
         </div>
         <div class="mover-trend">
-            <span class="mover-price" style="font-size:0.9rem;">${formatINR(stock.price)}</span>
+            <span class="mover-price" style="font-size:0.9rem;">${formatStockCurrency(stock.price, stock.currency)}</span>
             <span class="mover-pct ${isUp ? 'up' : 'down'}" style="font-size:0.8rem;">
                 ${isUp ? '▲' : '▼'} ${pctSign}${stock.percent_change.toFixed(2)}%
             </span>
@@ -1745,7 +1829,7 @@ function formatIndexOrCurrency(price, symbol, currency) {
     if (symbol && symbol.startsWith('^')) {
         return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price);
     }
-    if (!currency) return formatINR(price);
+    if (!currency) return formatStockCurrency(price, 'INR');
     const upperCurr = currency.toUpperCase();
     if (upperCurr === 'INR') {
         return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(price);

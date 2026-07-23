@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("JS ERROR: " + message + " at " + source + " line " + lineno);
+            return false;
+        };
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bull Trend AI | Live Indian & US Stock Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">

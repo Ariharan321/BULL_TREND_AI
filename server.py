@@ -130,7 +130,7 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
             if action == 'chart':
                 symbol = query_params.get('symbol', ['RELIANCE.NS'])[0].upper()
                 is_indian = '.NS' in symbol or '.BO' in symbol
-                exchange_rate = 1.0 if is_indian else get_exchange_rate()
+                exchange_rate = 1.0
                 
                 url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?interval=1d&range=2y"
                 data = fetch_json(url)
@@ -143,8 +143,8 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 
                 for i in range(len(timestamps)):
                     if quote.get('close') and i < len(quote['close']) and quote['close'][i] is not None:
-                        price_in_inr = quote['close'][i] * exchange_rate
-                        prices.append(price_in_inr)
+                        price_in_native = quote['close'][i]
+                        prices.append(price_in_native)
                         dt = datetime.datetime.fromtimestamp(timestamps[i])
                         labels.append(dt.strftime('%d %b %Y'))
                         
@@ -169,13 +169,13 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 day_high = meta.get('regularMarketDayHigh')
                 day_low = meta.get('regularMarketDayLow')
                 volume = meta.get('regularMarketVolume')
-
-                fiftyTwoWeekHigh = high_52 * exchange_rate if high_52 is not None else None
-                fiftyTwoWeekLow = low_52 * exchange_rate if low_52 is not None else None
-                regularMarketDayHigh = day_high * exchange_rate if day_high is not None else None
-                regularMarketDayLow = day_low * exchange_rate if day_low is not None else None
+ 
+                fiftyTwoWeekHigh = high_52 if high_52 is not None else None
+                fiftyTwoWeekLow = low_52 if low_52 is not None else None
+                regularMarketDayHigh = day_high if day_high is not None else None
+                regularMarketDayLow = day_low if day_low is not None else None
                 regularMarketVolume = volume
-
+ 
                 # yfinance fundamental metrics fetch
                 info = get_ticker_info(symbol)
                 yf_market_cap = None
@@ -187,11 +187,11 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 yf_roe = None
                 yf_owner = None
                 yf_desc = None
-
+ 
                 if info:
                     raw_market_cap = info.get('marketCap')
                     if raw_market_cap is not None:
-                        yf_market_cap = raw_market_cap * exchange_rate if not is_indian else raw_market_cap
+                        yf_market_cap = raw_market_cap
                     
                     yf_pe = info.get('trailingPE') or info.get('forwardPE')
                     
@@ -200,13 +200,15 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                         yf_div_yield = f"{raw_yield * 100:.2f}%" if raw_yield < 1.0 else f"{raw_yield:.2f}%"
                     else:
                         yf_div_yield = "N/A"
-
+ 
                     raw_book = info.get('bookValue')
                     if raw_book is not None:
-                        yf_book_value = raw_book * exchange_rate if not is_indian else raw_book
+                        yf_book_value = raw_book
                         
-                    yf_face_value = 10.0 if is_indian else 1.0
-
+                    yf_face_value = info.get('faceValue')
+                    if yf_face_value is None:
+                        yf_face_value = 10.0 if is_indian else 1.0
+ 
                     raw_roe = info.get('returnOnEquity')
                     if raw_roe is not None:
                         yf_roe = f"{raw_roe * 100:.2f}%"
@@ -223,7 +225,7 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                         yf_owner = f"{leader.get('name')} ({leader.get('title')})"
                         
                     yf_desc = info.get('longBusinessSummary')
-
+ 
                 self.send_json({
                     "symbol": meta.get('symbol', symbol),
                     "name": meta.get('shortName') or meta.get('longName') or meta.get('symbol', symbol),
@@ -244,7 +246,8 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                     "roce": yf_roce,
                     "roe": yf_roe,
                     "owner": yf_owner,
-                    "description": yf_desc
+                    "description": yf_desc,
+                    "currency": meta.get('currency', 'INR' if is_indian else 'USD')
                 })
                 
             elif action == 'top10':
@@ -252,8 +255,7 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 symbols = [s.strip() for s in symbols_param.split(',')]
                 raw = query_params.get('raw', ['0'])[0] == '1'
                 
-                has_us = any('.NS' not in s and '.BO' not in s for s in symbols) if not raw else False
-                exchange_rate = get_exchange_rate() if has_us else 1.0
+                exchange_rate = 1.0
                 
                 def fetch_single_quote(sym):
                     try:
@@ -263,7 +265,7 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                         meta = result['meta']
                         
                         is_indian = '.NS' in sym or '.BO' in sym
-                        rate = 1.0 if (is_indian or raw) else exchange_rate
+                        rate = 1.0
                         
                         raw_price = meta.get('regularMarketPrice') or meta.get('chartPreviousClose')
                         raw_prev_close = meta.get('chartPreviousClose') or raw_price
@@ -324,6 +326,61 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                         
                 SEARCH_RESULT_CACHE[q] = (current_time, results)
                 self.send_json(results)
+                
+            elif action == 'send_email':
+                to_addr = query_params.get('to', [''])[0]
+                subject = query_params.get('subject', ['Bull Trend AI Price Alert'])[0]
+                message = query_params.get('message', ['Price target reached.'])[0]
+                
+                if not to_addr:
+                    self.send_json({"error": "Missing recipient email address ('to')"}, 400)
+                    return
+                
+                smtp_server = os.environ.get('SMTP_SERVER', '')
+                smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+                smtp_user = os.environ.get('SMTP_USER', '')
+                smtp_password = os.environ.get('SMTP_PASSWORD', '')
+                
+                # Check if real SMTP credentials are set
+                if smtp_server and smtp_user and smtp_password:
+                    try:
+                        import smtplib
+                        from email.mime.text import MIMEText
+                        from email.mime.multipart import MIMEMultipart
+                        
+                        msg = MIMEMultipart()
+                        msg['From'] = smtp_user
+                        msg['To'] = to_addr
+                        msg['Subject'] = subject
+                        msg.attach(MIMEText(message, 'plain'))
+                        
+                        # Set up connection
+                        server = smtplib.SMTP(smtp_server, smtp_port)
+                        server.starttls()
+                        server.login(smtp_user, smtp_password)
+                        server.sendmail(smtp_user, to_addr, msg.as_string())
+                        server.quit()
+                        
+                        print(f"[SMTP Server] Real email alert successfully sent to {to_addr}")
+                        self.send_json({"success": True, "simulated": False})
+                    except Exception as err:
+                        print(f"[SMTP Server Error] Failed to send real email to {to_addr}: {err}")
+                        self.send_json({"success": False, "error": str(err)}, 500)
+                else:
+                    # Simulation/Fallback Mode
+                    print("==========================================================================", flush=True)
+                    print(f"[MOCK EMAIL GATEWAY] Sending Alert Email", flush=True)
+                    print(f"   To:      {to_addr}", flush=True)
+                    print(f"   Subject: {subject}", flush=True)
+                    print(f"   Message: {message}", flush=True)
+                    print("--------------------------------------------------------------------------", flush=True)
+                    print("   [TIP] Setup environment variables to send real emails locally:", flush=True)
+                    print("      set SMTP_SERVER=smtp.gmail.com", flush=True)
+                    print("      set SMTP_PORT=587", flush=True)
+                    print("      set SMTP_USER=your_email@gmail.com", flush=True)
+                    print("      set SMTP_PASSWORD=your_app_password", flush=True)
+                    print("==========================================================================", flush=True)
+                    self.send_json({"success": True, "simulated": True})
                 
         except Exception as e:
             self.send_json({"error": str(e)}, 500)

@@ -485,6 +485,8 @@ body {
 .toast.show { transform: translateX(0); }
 .toast.alert { border-left: 4px solid var(--primary); }
 .toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.warning { border-left: 4px solid #f59e0b; }
 
 .spinner {
     border: 4px solid rgba(255, 255, 255, 0.1); border-left-color: var(--primary);

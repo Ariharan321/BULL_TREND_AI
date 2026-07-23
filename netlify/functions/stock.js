@@ -29,7 +29,7 @@ exports.handler = async function(event, context) {
             
             // Check if US stock
             const isIndian = symbol.includes('.NS') || symbol.includes('.BO');
-            const exchangeRate = isIndian ? 1 : await getExchangeRate();
+            const exchangeRate = 1;
             
             const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=2m&range=1d`;
             const data = await fetchJson(url);
@@ -42,8 +42,8 @@ exports.handler = async function(event, context) {
             
             for (let i = 0; i < timestamps.length; i++) {
                 if (quote.close && quote.close[i] !== null && quote.close[i] !== undefined) {
-                    const priceInINR = quote.close[i] * exchangeRate;
-                    prices.push(priceInINR);
+                    const priceInNative = quote.close[i];
+                    prices.push(priceInNative);
                     const date = new Date(timestamps[i] * 1000);
                     labels.push(date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
                 }
@@ -57,6 +57,12 @@ exports.handler = async function(event, context) {
             metaPrice *= exchangeRate;
             metaPrevClose *= exchangeRate;
             
+            let fiftyTwoWeekHigh = result.meta.fiftyTwoWeekHigh ? result.meta.fiftyTwoWeekHigh : null;
+            let fiftyTwoWeekLow = result.meta.fiftyTwoWeekLow ? result.meta.fiftyTwoWeekLow : null;
+            let regularMarketDayHigh = result.meta.regularMarketDayHigh ? result.meta.regularMarketDayHigh : null;
+            let regularMarketDayLow = result.meta.regularMarketDayLow ? result.meta.regularMarketDayLow : null;
+            let regularMarketVolume = result.meta.regularMarketVolume || null;
+            
             return {
                 statusCode: 200,
                 headers: { 'Access-Control-Allow-Origin': '*' },
@@ -66,7 +72,13 @@ exports.handler = async function(event, context) {
                     price: metaPrice,
                     prevClose: metaPrevClose,
                     labels,
-                    prices
+                    prices,
+                    fiftyTwoWeekHigh,
+                    fiftyTwoWeekLow,
+                    regularMarketDayHigh,
+                    regularMarketDayLow,
+                    regularMarketVolume,
+                    currency: result.meta.currency || (isIndian ? 'INR' : 'USD')
                 })
             };
         } 
@@ -74,9 +86,7 @@ exports.handler = async function(event, context) {
             const symbolsParam = event.queryStringParameters.symbols || 'RELIANCE.NS';
             const symbols = symbolsParam.split(',');
             
-            // Fetch exchange rate in case there are US stocks
-            const hasUSStocks = symbols.some(s => !s.includes('.NS') && !s.includes('.BO'));
-            const exchangeRate = hasUSStocks ? await getExchangeRate() : 1;
+            const exchangeRate = 1;
             
             // Yahoo's quote API is unauthorized, so we request /chart for each in parallel
             const promises = symbols.map(async (symbol) => {
@@ -87,7 +97,7 @@ exports.handler = async function(event, context) {
                     const meta = result.meta;
                     
                     const isIndian = symbol.includes('.NS') || symbol.includes('.BO');
-                    const rate = isIndian ? 1 : exchangeRate;
+                    const rate = 1;
                     
                     const price = (meta.regularMarketPrice || meta.chartPreviousClose) * rate;
                     const prevClose = meta.chartPreviousClose * rate;
@@ -100,7 +110,8 @@ exports.handler = async function(event, context) {
                         price: price,
                         prevClose: prevClose,
                         change: change,
-                        percent_change: pct
+                        percent_change: pct,
+                        currency: meta.currency || (isIndian ? 'INR' : 'USD')
                     };
                 } catch(e) {
                     console.error(`Failed to fetch quote for ${symbol}:`, e.message);
@@ -142,6 +153,32 @@ exports.handler = async function(event, context) {
                 statusCode: 200,
                 headers: { 'Access-Control-Allow-Origin': '*' },
                 body: JSON.stringify(results)
+            };
+        }
+        else if (action === 'send_email') {
+            const toAddr = event.queryStringParameters.to || '';
+            const subject = event.queryStringParameters.subject || 'Bull Trend AI Price Alert';
+            const message = event.queryStringParameters.message || 'Price target reached.';
+            
+            if (!toAddr) {
+                return {
+                    statusCode: 400,
+                    headers: { 'Access-Control-Allow-Origin': '*' },
+                    body: JSON.stringify({ error: "Missing recipient email address ('to')" })
+                };
+            }
+            
+            console.log("==========================================================================");
+            console.log(`📧 [NETLIFY MOCK EMAIL GATEWAY] Sending Alert Email`);
+            console.log(`   To:      ${toAddr}`);
+            console.log(`   Subject: ${subject}`);
+            console.log(`   Message: ${message}`);
+            console.log("==========================================================================");
+            
+            return {
+                statusCode: 200,
+                headers: { 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({ success: true, simulated: true })
             };
         }
 
