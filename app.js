@@ -123,8 +123,41 @@ function initChart() {
                 }
             },
             scales: {
-                x: { grid: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 8 } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false }, ticks: { callback: function(value) { return '₹ ' + value; } } }
+                x: {
+                    grid: {
+                        display: false,
+                        drawBorder: true
+                    },
+                    border: {
+                        display: true,
+                        color: 'rgba(255, 255, 255, 0.12)'
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: { family: "'Outfit', sans-serif", size: 10 },
+                        maxTicksLimit: 8
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        drawBorder: true
+                    },
+                    border: {
+                        display: true,
+                        color: 'rgba(255, 255, 255, 0.12)'
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: { family: "'Outfit', sans-serif", size: 10 },
+                        callback: function(value) {
+                            if (value >= 1000) {
+                                return '₹' + (value / 1000).toFixed(0) + 'K';
+                            }
+                            return '₹' + value;
+                        }
+                    }
+                }
             },
             interaction: { mode: 'nearest', axis: 'x', intersect: false }
         }
@@ -189,6 +222,16 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         
         if (!isBackgroundUpdate && !isInitialLoad) {
             symbolInput.value = '';
+        }
+        
+        if (!isBackgroundUpdate) {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                if (b.getAttribute('data-range') === 'max') {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
         }
         
         if (data.prices && data.prices.length > 0) {
@@ -757,6 +800,38 @@ symbolInput.addEventListener('keypress', (e) => {
 setAlertBtn.addEventListener('click', setAlert);
 clearAlertBtn.addEventListener('click', clearAlert);
 runAiBtn.addEventListener('click', runAiPrediction);
+
+// Chart range filtering
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const range = e.target.getAttribute('data-range');
+        
+        // Remove active class from all filters and add to this one
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        
+        if (!currentStockData || !currentStockData.prices || currentStockData.prices.length === 0) return;
+        
+        let filteredPrices = [...currentStockData.prices];
+        let filteredLabels = [...currentStockData.labels];
+        
+        if (range === '1m') {
+            // Last 1 month (~20 trading days)
+            const count = Math.min(filteredPrices.length, 20);
+            filteredPrices = filteredPrices.slice(-count);
+            filteredLabels = filteredLabels.slice(-count);
+        } else if (range === '3m') {
+            // Last 3 months (~60 trading days)
+            const count = Math.min(filteredPrices.length, 60);
+            filteredPrices = filteredPrices.slice(-count);
+            filteredLabels = filteredLabels.slice(-count);
+        }
+        
+        // Update the Chart
+        const changeValue = currentPrice - previousClose;
+        updateChart(filteredLabels, filteredPrices, changeValue >= 0);
+    });
+});
 
 // --- AUTH STATE & TRANSITIONS ---
 const authOverlay = document.getElementById('auth-overlay');
