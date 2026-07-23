@@ -8,7 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=2.0.1">
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
@@ -30,13 +31,25 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                     Alerts
                 </a>
-                <a href="#" class="nav-item ai-glow" data-target="view-predict">
+                <a href="#" class="nav-item" data-target="view-predict">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path><path d="M16 12L12 8l-4 4"></path></svg>
                     AI Predict
                 </a>
+                <a href="#" class="nav-item" data-target="view-insights">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Market Insights
+                </a>
+                <a href="#" class="nav-item" data-target="view-indices">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    Global Markets
+                </a>
                 <a href="#" class="nav-item" data-target="view-trade">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1);"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" /><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" /><path d="m2 16 6 6" /></svg>
                     Buy / Sell
+                </a>
+                <a href="#" class="nav-item" data-target="view-about">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    About
                 </a>
             </nav>
             
@@ -63,29 +76,12 @@
                     <button id="header-login-btn" class="btn-auth-box">Login</button>
                     <button id="header-signup-btn" class="btn-auth-box outline">Sign Up</button>
                 </div>
-                <div id="header-user-profile" class="user-profile-container hidden">
-                    <div class="user-profile-trigger" id="profile-menu-trigger">
-                        <div class="avatar" id="header-avatar" style="width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></div>
-                        <span id="user-display-name" class="username-tag">Guest</span>
-                        <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 4px; opacity: 0.7;"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </div>
-                    <div class="profile-dropdown-menu hidden" id="profile-dropdown-menu">
-                        <div class="dropdown-profile-header" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px;">
-                            <div class="avatar" id="dropdown-avatar" style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 2px solid var(--primary); flex-shrink: 0;"></div>
-                            <div class="dropdown-profile-info" style="display: flex; flex-direction: column; overflow: hidden;">
-                                <div id="dropdown-user-name" style="font-weight: 600; color: var(--text-main); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Guest</div>
-                                <div id="dropdown-user-email" style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">guest@example.com</div>
-                            </div>
-                        </div>
-                        <hr class="dropdown-divider">
-                        <a href="#" class="dropdown-item" data-action="profile">View Profile</a>
-                        <a href="#" class="dropdown-item" data-action="edit-profile">Edit Profile</a>
-                        <a href="#" class="dropdown-item" data-action="profile-pic">Change Profile Picture</a>
-                        <a href="#" class="dropdown-item" data-action="password">Change Password</a>
-                        <a href="#" class="dropdown-item" data-action="notifications">Notification Settings</a>
-                        <hr class="dropdown-divider">
-                        <a href="#" class="dropdown-item logout-item" id="logout-btn-dropdown">Logout</a>
-                    </div>
+                <div id="header-user-profile" class="user-profile hidden">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" class="avatar">
+                    <span id="user-display-name" class="username-tag">Guest</span>
+                    <button id="logout-btn" class="logout-icon-btn" title="Logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
                 </div>
             </header>
 
@@ -93,15 +89,6 @@
             
             <!-- Dashboard View -->
             <div id="view-dashboard" class="view-section active">
-                <!-- Live Stock Ticker Banner -->
-                <div class="ticker-banner glass-panel" id="live-stock-ticker">
-                    <div class="ticker-wrap">
-                        <div class="ticker-content" id="ticker-items-container">
-                            <div style="padding: 0 20px; color: var(--text-muted); font-size: 0.85rem;">Initializing live stock ticker...</div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="dashboard-grid">
                     
                     <!-- Top 10 Stocks Sidebar -->
@@ -125,11 +112,9 @@
                                     <svg id="trend-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                                     <span id="change-percent">--%</span>
                                 </div>
-                                <button id="dash-buy-btn" class="trade-action-btn buy-btn hidden">
-                                    Buy
-                                </button>
-                                <button id="dash-sell-btn" class="trade-action-btn sell-btn hidden">
-                                    Sell
+                                <button id="know-more-btn" class="know-more-btn hidden">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    Know More About The Company
                                 </button>
                             </div>
                             <p class="last-updated" id="last-updated">Last updated: Just now</p>
@@ -138,9 +123,23 @@
                         <!-- Chart Card -->
                         <div class="card chart-card glass-panel">
                             <div class="chart-header">
-                                <h3>Price History (Intraday)</h3>
-                                <div class="time-filters">
-                                    <button class="filter-btn active">1D</button>
+                                <h3>Price History</h3>
+                                <div class="chart-header-actions">
+                                    <div class="time-filters">
+                                        <button class="filter-btn" data-range="1m">1 Month</button>
+                                        <button class="filter-btn" data-range="3m">3 Month</button>
+                                        <button class="filter-btn" data-range="6m">6 Month</button>
+                                        <button class="filter-btn" data-range="1y">1 Year</button>
+                                        <button class="filter-btn active" data-range="2y">2 Years</button>
+                                    </div>
+                                    <button id="chart-expand-btn" class="chart-expand-btn" title="Expand Chart">
+                                        <svg id="expand-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="15 3 21 3 21 9"></polyline>
+                                            <polyline points="9 21 3 21 3 15"></polyline>
+                                            <line x1="21" y1="3" x2="14" y2="10"></line>
+                                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                             <div class="chart-container" style="position: relative; height: 350px; width: 100%">
@@ -148,27 +147,6 @@
                                 <div id="chart-loader" class="loader-overlay hidden">
                                     <div class="spinner"></div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Watchlist Card -->
-                        <div class="card watchlist-card glass-panel" style="margin-top: 24px;">
-                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <h3>My Watchlist</h3>
-                                <span id="market-status-container" style="font-size: 0.9rem; color: var(--text-muted); display: none;">
-                                    Market Status: <span id="market-status" style="font-weight: 600;">--</span>
-                                </span>
-                            </div>
-                            
-                            <!-- Guest State Watchlist Prompt -->
-                            <div id="watchlist-auth-prompt" class="watchlist-empty-state" style="text-align: center; padding: 30px 20px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; opacity: 0.7;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                                <p style="color: var(--text-muted); font-size: 0.95rem;">Log in to add stocks to your watchlist and track real-time changes.</p>
-                            </div>
-                            
-                            <!-- Logged In Watchlist Grid -->
-                            <div id="watchlist-grid" class="watchlist-grid hidden">
-                                <!-- Dynamically populated watchlist items -->
                             </div>
                         </div>
                     </div>
@@ -181,71 +159,31 @@
 
             <!-- Alerts View -->
             <div id="view-alerts" class="view-section">
-                <div class="alerts-layout">
-                    <!-- Left: Create Alert Form -->
-                    <div class="card alert-card glass-panel">
-                        <h3>Set Price Alert</h3>
-                        <p class="subtitle">Get notified when target is reached for <span class="highlight" id="alert-ticker-name">RELIANCE</span></p>
-                        
-                        <div class="alert-form">
-                            <div class="input-group">
-                                <label>Target Price (₹)</label>
-                                <input type="number" id="alert-price" placeholder="e.g. 3000">
-                            </div>
-                            <div class="input-group">
-                                <label>Condition</label>
-                                <select id="alert-condition">
-                                    <option value="above">Goes Above</option>
-                                    <option value="below">Drops Below</option>
-                                    <option value="equals">Equals To</option>
-                                </select>
-                            </div>
-                            <div class="input-group" id="email-alert-group">
-                                <label>Email Address</label>
-                                <input type="email" id="alert-email" placeholder="Enter your email address">
-                                <span id="email-helper-text" class="helper-text hidden">Alerts will be sent to your registered email.</span>
-                                <div style="margin-top: 8px;">
-                                    <a id="use-diff-email-btn" class="btn-link hidden">Use Different Email</a>
-                                </div>
-                            </div>
-                            <button id="set-alert-btn" class="btn-primary full-width">Create Alert</button>
-                        </div>
-                    </div>
+                <div class="card alert-card glass-panel" style="max-width: 600px; margin: 0 auto;">
+                    <h3>Set Price Alert</h3>
+                    <p class="subtitle">Get notified when target is reached for <span class="highlight" id="alert-ticker-name">RELIANCE</span></p>
                     
-                    <!-- Right: Alert History Panel -->
-                    <div class="card alert-history-card glass-panel">
-                        <div class="history-header" style="margin-bottom: 20px;">
-                            <h3>Alert History & Logs</h3>
-                            <div class="history-controls" style="display: flex; gap: 12px; margin-top: 12px; align-items: center;">
-                                <div class="search-input-wrapper">
-                                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                    <input type="text" id="alert-search" placeholder="Search stock...">
-                                </div>
-                                <div class="custom-dropdown" id="status-filter-dropdown">
-                                    <div class="custom-dropdown-trigger" id="status-filter-trigger">
-                                        <span id="status-filter-label">All Statuses</span>
-                                        <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                    </div>
-                                    <div class="custom-dropdown-options hidden" id="status-filter-options">
-                                        <div class="custom-dropdown-option active" data-value="all">All Statuses</div>
-                                        <div class="custom-dropdown-option" data-value="pending">Pending</div>
-                                        <div class="custom-dropdown-option" data-value="triggered">Triggered</div>
-                                        <div class="custom-dropdown-option" data-value="cancelled">Cancelled</div>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="alert-form">
+                        <div class="input-group">
+                            <label>Target Price (₹)</label>
+                            <input type="number" id="alert-price" placeholder="e.g. 3000">
                         </div>
-                        
-                        <!-- Guest State Alerts Prompt -->
-                        <div id="alerts-auth-prompt" class="watchlist-empty-state" style="text-align: center; padding: 40px 20px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; opacity: 0.7;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                            <p style="color: var(--text-muted); font-size: 0.95rem;">Log in to view your alert history and active configurations.</p>
+                        <div class="input-group">
+                            <label>Condition</label>
+                            <select id="alert-condition">
+                                <option value="above">Goes Above</option>
+                                <option value="below">Drops Below</option>
+                            </select>
                         </div>
-                        
-                        <!-- Logged In Alert History List -->
-                        <div id="alert-history-list" class="alert-history-list hidden">
-                            <!-- Populated dynamically -->
+                        <div class="input-group">
+                            <label>Email Address (for Email notifications)</label>
+                            <input type="email" id="alert-email" placeholder="e.g. name@example.com">
                         </div>
+                        <button id="set-alert-btn" class="btn-primary full-width">Create Alert</button>
+                    </div>
+                    <div id="active-alert-container" class="active-alert hidden">
+                        <p><strong>Active Alert:</strong> <span id="active-alert-text"></span></p>
+                        <button id="clear-alert-btn" class="btn-secondary">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -258,6 +196,11 @@
                         <h2>AI Technical Analysis</h2>
                     </div>
                     <p class="subtitle">Run advanced pattern recognition and momentum analysis for <span class="highlight" id="ai-ticker-name">RELIANCE</span></p>
+                    
+                    <div class="predict-stock-info">
+                        <span id="ai-stock-name" class="predict-stock-name">--</span>
+                        <span id="ai-stock-ticker" class="ticker">--</span>
+                    </div>
                     
                     <div class="predict-actions">
                         <button id="run-ai-btn" class="btn-primary" style="font-size: 1.1rem; padding: 12px 24px;">
@@ -285,8 +228,125 @@
                         </div>
                         
                         <div class="final-verdict">
-                            <h3>AI Consensus: <span id="ai-verdict" class="highlight">BULLISH</span></h3>
-                            <p>Projected 24H Target: <strong id="ai-target">₹ --</strong></p>
+                            <div class="verdict-grid">
+                                <div class="verdict-item">
+                                    <span class="verdict-label">Tomorrow's Trend</span>
+                                    <div class="verdict-val">
+                                        <span id="ai-verdict" class="verdict-direction">--</span>
+                                    </div>
+                                </div>
+                                <div class="verdict-item">
+                                    <span class="verdict-label">Projected 24H Target</span>
+                                    <div class="verdict-val">
+                                        <strong id="ai-target">₹ --</strong>
+                                        <span id="ai-expected-change" class="expected-change">--%</span>
+                                    </div>
+                                </div>
+                                <div class="verdict-item">
+                                    <span class="verdict-label">AI Confidence Score</span>
+                                    <div class="verdict-val">
+                                        <div class="confidence-container">
+                                            <span id="ai-confidence-score" class="confidence-num">--%</span>
+                                            <div class="confidence-bar"><div class="confidence-fill" id="ai-confidence-fill"></div></div>
+                                        </div>
+                                        <span id="ai-confidence-badge" class="confidence-badge">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Market Insights View -->
+            <div id="view-insights" class="view-section">
+                <div class="insights-container">
+                    <div class="insights-grid">
+                        <!-- Top 10 Growing -->
+                        <div class="card insights-card glass-panel">
+                            <div class="insights-card-header">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                <h3>Top 10 Growing Stocks</h3>
+                            </div>
+                            <div id="growing-stocks-list" class="movers-list">
+                                <div class="loader-small"></div>
+                            </div>
+                        </div>
+
+                        <!-- Top 10 Falling -->
+                        <div class="card insights-card glass-panel">
+                            <div class="insights-card-header">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                                <h3>Top 10 Falling Stocks</h3>
+                            </div>
+                            <div id="falling-stocks-list" class="movers-list">
+                                <div class="loader-small"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trending Industries -->
+                    <div class="card industries-card glass-panel">
+                        <div class="insights-card-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                            <h3>Top Trending Industries</h3>
+                        </div>
+                        <div id="trending-industries-list" class="industries-list">
+                            <div class="loader-small"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Global Markets View -->
+            <div id="view-indices" class="view-section">
+                <div class="insights-container">
+                    <!-- World Indices Grid -->
+                    <div class="card glass-panel">
+                        <div class="insights-card-header">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <h3>World Stock Indices</h3>
+                        </div>
+                        <div id="global-indices-grid" class="indices-list-grid">
+                            <div class="loader-small"></div>
+                        </div>
+                    </div>
+
+                    <!-- Index Breakdown -->
+                    <div id="index-breakdown-card" class="card glass-panel hidden">
+                        <div class="insights-card-header" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span id="breakdown-country-flag" style="font-size: 1.8rem;">🇮🇳</span>
+                                <div>
+                                    <h3 id="breakdown-index-name" style="margin-bottom: 2px;">Nifty 50 Companies</h3>
+                                    <span id="breakdown-index-symbol" class="ticker">^NSEI</span>
+                                </div>
+                            </div>
+                            <div id="breakdown-index-performance" style="font-size: 1.15rem; font-weight: 700; padding: 6px 12px; border-radius: 8px;">--%</div>
+                        </div>
+
+                        <div class="insights-grid" style="margin-top: 10px;">
+                            <!-- Top Gainers -->
+                            <div style="display: flex; flex-direction: column;">
+                                <h4 style="color: var(--success); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(16, 185, 129, 0.15); padding-bottom: 6px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                    Top Gainers (Profit)
+                                </h4>
+                                <div id="index-gainers-list" class="movers-list">
+                                    <!-- Dynamic rows -->
+                                </div>
+                            </div>
+
+                            <!-- Top Losers -->
+                            <div style="display: flex; flex-direction: column;">
+                                <h4 style="color: var(--danger); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(239, 68, 68, 0.15); padding-bottom: 6px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                                    Top Losers (Loss)
+                                </h4>
+                                <div id="index-losers-list" class="movers-list">
+                                    <!-- Dynamic rows -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -405,6 +465,107 @@
                 </div>
             </div>
 
+            <!-- About View -->
+            <div id="view-about" class="view-section">
+                <div class="card about-card glass-panel" style="max-width: 850px; margin: 0 auto; padding: 40px;">
+                    <div style="text-align: center; margin-bottom: 35px;">
+                        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; margin-bottom: 12px; background: linear-gradient(135deg, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.2));">About Bull Trend AI</h2>
+                        <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+                            Your intelligent terminal for financial market analysis. Bridging the gap between raw data and actionable predictive strategies.
+                        </p>
+                    </div>
+
+                    <div class="about-grid">
+                        <div class="about-feature-card">
+                            <div class="feature-icon">📈</div>
+                            <h4>Real-Time Tracking</h4>
+                            <p>Stream real-time price feeds for NSE, BSE, and US markets with automatic INR currency conversion.</p>
+                        </div>
+                        <div class="about-feature-card">
+                            <div class="feature-icon">🤖</div>
+                            <h4>AI Price Prediction</h4>
+                            <p>Leverage technical indicators like RSI and moving averages to analyze trends and get clear trade recommendations.</p>
+                        </div>
+                        <div class="about-feature-card">
+                            <div class="feature-icon">🔔</div>
+                            <h4>Smart Alert System</h4>
+                            <p>Configure custom price thresholds and receive simulated Email and visual toast notifications instantly when triggered.</p>
+                        </div>
+                        <div class="about-feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h4>Interactive Charts</h4>
+                            <p>Visualize intraday movements using high-performance Chart.js integration, synced directly to live API feeds.</p>
+                        </div>
+                    </div>
+
+                    <div class="about-divider"></div>
+
+                    <div class="about-details-section">
+                        <h3>How It Works</h3>
+                        <div class="about-steps">
+                            <div class="about-step">
+                                <div class="step-num">1</div>
+                                <div class="step-content">
+                                    <h5>Data Ingestion</h5>
+                                    <p>Our serverless backend queries live endpoints directly from Yahoo Finance API, bypassing CORS locks securely.</p>
+                                </div>
+                            </div>
+                            <div class="about-step">
+                                <div class="step-num">2</div>
+                                <div class="step-content">
+                                    <h5>Signal Analytics</h5>
+                                    <p>Algorithms compute key technical indicator thresholds to evaluate momentum patterns (RSI, ROCE, ROE).</p>
+                                </div>
+                            </div>
+                            <div class="about-step">
+                                <div class="step-num">3</div>
+                                <div class="step-content">
+                                    <h5>Alert Execution</h5>
+                                    <p>The client monitors real-time price fluctuations and executes Email alerts if values cross the set constraints.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="about-divider"></div>
+
+                    <div class="about-mission-section" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; margin-bottom: 10px;">
+                        <div>
+                            <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; margin-bottom: 12px; color: var(--text-main);">Our Vision</h3>
+                            <p style="font-size: 0.9rem; line-height: 1.6; color: var(--text-muted);">
+                                We believe institutional-grade analytical tools should be accessible to everyone. By integrating real-time market data with dynamic technical indicators, we simplify trend monitoring for traders around the globe.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; margin-bottom: 12px; color: var(--text-main);">Disclaimer</h3>
+                            <p style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); padding: 12px; border-radius: 8px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1);">
+                                ⚠️ <strong>Market Risk Warning:</strong> All data, analysis, and recommendations are simulated and provided for informational purposes only. None of the technical indicators represent financial advice. Always perform your own research before trading.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="about-divider"></div>
+
+                    <div class="about-tech-stack">
+                        <h3>Technical Architecture</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">HTML5 / CSS3</span>
+                            <span class="tech-tag">JavaScript ES6</span>
+                            <span class="tech-tag">Chart.js</span>
+                            <span class="tech-tag">Python http.server</span>
+                            <span class="tech-tag">yfinance API</span>
+                            <span class="tech-tag">Deployment Platform</span>
+                        </div>
+                    </div>
+
+                    <div class="about-divider"></div>
+
+                    <div style="text-align: center; font-size: 1rem; color: var(--text-muted); margin-top: 10px; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.5px;">
+                        Build version 1.2.0 • Powered by <strong>BULL TREND AI</strong>
+                    </div>
+                </div>
+            </div>
+
             <div id="toast-container" class="toast-container"></div>
         </main>
     </div>
@@ -473,122 +634,121 @@
         </div>
     </div>
 
-    <!-- Profile & Settings Overlay -->
-    <div id="profile-settings-overlay" class="hidden">
-        <div class="auth-card">
-            <!-- Close Button -->
-            <button id="settings-close-btn" class="auth-back-btn" style="left: auto; right: 24px;" title="Close">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            
-            <h2 id="settings-title">My Profile</h2>
-            <p class="auth-subtitle" id="settings-subtitle">Manage your account information and preferences</p>
-            
-            <!-- 1. Profile Details Screen -->
-            <div id="settings-profile-screen" class="settings-screen hidden">
-                <div class="profile-details-layout" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
-                    <div style="display: flex; justify-content: center; margin-bottom: 8px;">
-                        <div class="avatar" id="settings-avatar" style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); flex-shrink: 0;"></div>
+    <!-- Company Details Modal Overlay -->
+    <div id="company-details-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel animate-scale">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2 id="modal-company-name">Reliance Industries Ltd</h2>
+                    <div class="modal-tags">
+                        <span id="modal-company-ticker" class="ticker">RELIANCE.NS</span>
+                        <span id="modal-company-exchange" class="exchange-tag">NSE</span>
                     </div>
-                    <div class="auth-input-group">
-                        <label>Full Name</label>
-                        <input type="text" id="settings-profile-name" class="auth-input" readonly>
-                    </div>
-                    <div class="auth-input-group">
-                        <label>Username / Email</label>
-                        <input type="text" id="settings-profile-email" class="auth-input" readonly>
-                    </div>
-                    <div class="auth-input-group">
-                        <label>Account Created</label>
-                        <input type="text" id="settings-profile-created" class="auth-input" readonly>
-                    </div>
-                    <div style="display: flex; gap: 12px; margin-top: 10px;">
-                        <button id="btn-to-edit-profile" class="auth-btn-primary" style="flex: 1; padding: 10px; font-size: 0.85rem;">Edit Name</button>
-                        <button id="btn-to-change-avatar" class="auth-btn-secondary" style="flex: 1; padding: 10px; font-size: 0.85rem;">Edit Picture</button>
-                    </div>
-                    <button id="btn-send-test-email" class="auth-btn-secondary full-width" style="margin-top: 12px; border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.05); color: #3b82f6; font-size: 0.9rem; padding: 10px;">🧪 Send Test Email</button>
                 </div>
+                <button id="modal-close-btn" class="modal-close-btn">&times;</button>
             </div>
-            
-            <!-- 1b. Edit Profile Screen -->
-            <div id="settings-edit-profile-screen" class="settings-screen hidden">
-                <div class="auth-input-group" style="margin-bottom: 16px;">
-                    <label for="edit-profile-name">Full Name</label>
-                    <input type="text" id="edit-profile-name" class="auth-input" placeholder="Enter your full name">
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <button id="submit-edit-profile-btn" class="auth-btn-primary" style="flex: 1;">Save Name</button>
-                    <button class="auth-btn-secondary btn-back-to-profile" style="flex: 1;">Back</button>
-                </div>
-            </div>
-            
-            <!-- 1c. Change Profile Picture Screen -->
-            <div id="settings-profile-pic-screen" class="settings-screen hidden">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%;">
-                    <div class="avatar" id="upload-avatar-preview" style="width: 90px; height: 90px; border-radius: 50%; overflow: hidden; border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); flex-shrink: 0;"></div>
-                    
-                    <div class="file-upload-wrapper" style="width: 100%; position: relative;">
-                        <input type="file" id="profile-pic-file" accept="image/*" style="display: none;">
-                        <button id="btn-choose-file" class="auth-btn-secondary full-width" style="margin-bottom: 8px;">Choose Photo...</button>
-                        <span id="chosen-file-name" style="font-size: 0.8rem; color: var(--text-muted); display: block; text-align: center; margin-bottom: 12px;">No file chosen</span>
+            <div class="modal-body">
+                <div class="modal-metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-label">Market Capitalization</span>
+                        <span id="modal-market-cap" class="metric-value">₹ --</span>
                     </div>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                        <button id="submit-profile-pic-btn" class="auth-btn-primary full-width">Upload & Save</button>
-                        <div style="display: flex; gap: 12px;">
-                            <button id="submit-delete-pic-btn" class="auth-btn-secondary" style="flex: 1; color: var(--danger); border-color: rgba(239,68,68,0.25);">Remove Photo</button>
-                            <button class="auth-btn-secondary btn-back-to-profile" style="flex: 1;">Back</button>
-                        </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Current Price</span>
+                        <span id="modal-current-price" class="metric-value">₹ --</span>
                     </div>
-                </div>
-            </div>
-            
-            <!-- 2. Change Password Screen -->
-            <div id="settings-password-screen" class="settings-screen hidden">
-                <div class="auth-input-group" style="margin-bottom: 12px;">
-                    <label for="password-current">Current Password</label>
-                    <input type="password" id="password-current" class="auth-input" placeholder="Enter current password">
-                </div>
-                <div class="auth-input-group" style="margin-bottom: 12px;">
-                    <label for="password-new">New Password</label>
-                    <input type="password" id="password-new" class="auth-input" placeholder="At least 4 characters">
-                </div>
-                <div class="auth-input-group" style="margin-bottom: 16px;">
-                    <label for="password-confirm">Confirm New Password</label>
-                    <input type="password" id="password-confirm" class="auth-input" placeholder="Confirm new password">
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <button id="submit-change-password-btn" class="auth-btn-primary" style="flex: 1;">Update Password</button>
-                    <button class="auth-btn-secondary btn-back-to-profile" style="flex: 1;">Back</button>
-                </div>
-            </div>
-            
-            <!-- 3. Notification Settings Screen -->
-            <div id="settings-notifications-screen" class="settings-screen hidden">
-                <div style="display: flex; flex-direction: column; gap: 20px; width: 100%; text-align: left;">
-                    <div style="display: flex; align-items: flex-start; gap: 12px;">
-                        <input type="checkbox" id="notify-email" checked style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary);">
-                        <label for="notify-email" style="font-size: 0.95rem; cursor: pointer;">
-                            <strong style="display: block; margin-bottom: 2px;">Email Alerts Enabled</strong>
-                            <span style="font-size: 0.85rem; color: var(--text-muted);">Receive instant HTML reports when price target thresholds are reached.</span>
-                        </label>
+                    <div class="metric-box">
+                        <span class="metric-label">52-Week Range</span>
+                        <span id="modal-52w-range" class="metric-value">₹ -- - ₹ --</span>
                     </div>
-                    <div style="display: flex; align-items: flex-start; gap: 12px;">
-                        <input type="checkbox" id="notify-sound" checked style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary);">
-                        <label for="notify-sound" style="font-size: 0.95rem; cursor: pointer;">
-                            <strong style="display: block; margin-bottom: 2px;">Audio Notifications</strong>
-                            <span style="font-size: 0.85rem; color: var(--text-muted);">Play high-frequency audio tone inside the browser dashboard.</span>
-                        </label>
+                    <div class="metric-box">
+                        <span class="metric-label">Stock P/E</span>
+                        <span id="modal-pe-ratio" class="metric-value">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Book Value</span>
+                        <span id="modal-book-value" class="metric-value">₹ --</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Dividend Yield</span>
+                        <span id="modal-div-yield" class="metric-value">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">ROCE</span>
+                        <span id="modal-roce" class="metric-value">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">ROE</span>
+                        <span id="modal-roe" class="metric-value">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Face Value</span>
+                        <span id="modal-face-value" class="metric-value">₹ --</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Volume (24h)</span>
+                        <span id="modal-volume" class="metric-value">--</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Day Range</span>
+                        <span id="modal-day-range" class="metric-value">₹ -- - ₹ --</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Previous Close</span>
+                        <span id="modal-prev-close" class="metric-value">₹ --</span>
                     </div>
                 </div>
-                <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="submit-save-notifications-btn" class="auth-btn-primary" style="flex: 1; margin-top: 0;">Save Config</button>
-                    <button class="auth-btn-secondary btn-back-to-profile" style="flex: 1;">Back</button>
+                <div class="modal-description-section">
+                    <div class="modal-meta-row" style="margin-bottom: 16px; font-size: 0.95rem; color: var(--text-main); border-bottom: 1px dashed rgba(255, 255, 255, 0.05); padding-bottom: 12px;">
+                        <strong>Owner / CEO / Founder:</strong> <span id="modal-company-owner" style="color: var(--primary); font-weight: 700; margin-left: 6px;">--</span>
+                    </div>
+                    <h3>Company Overview</h3>
+                    <p id="modal-company-desc" class="company-desc-text">Loading details...</p>
                 </div>
             </div>
         </div>
     </div>
     
-    <script src="app.js?v=2.0.3"></script>
+    <!-- Industry breakdown details modal overlay -->
+    <div id="industry-modal" class="modal-overlay hidden">
+        <div class="auth-card industry-modal-content glass-panel" style="max-width: 650px; width: 95%; padding: 30px;">
+            <!-- Close Button -->
+            <button id="industry-modal-close" class="auth-back-btn" title="Close" style="top: 16px; right: 16px; left: auto; display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <div class="modal-header-section" style="width: 100%; text-align: left; margin-bottom: 20px;">
+                <span class="verdict-label" style="display: block; margin-bottom: 4px; font-size: 0.8rem; letter-spacing: 1px;">Sector Overview</span>
+                <h2 id="modal-industry-name" style="margin-bottom: 6px; font-size: 1.8rem; font-weight: 700; color: var(--text-main); text-align: left; line-height: 1.2;">Industry Details</h2>
+                <div id="modal-industry-performance" style="font-size: 1rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px;">--%</div>
+            </div>
+
+            <!-- Two Column Layout for Gainers and Losers -->
+            <div class="modal-columns-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; text-align: left;">
+                <div class="modal-col" style="display: flex; flex-direction: column;">
+                    <h4 style="color: var(--success); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(16, 185, 129, 0.15); padding-bottom: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        Gainers (Profit)
+                    </h4>
+                    <div id="modal-gainers-list" class="movers-list" style="gap: 8px; overflow-y: auto; max-height: 250px; padding-right: 4px;">
+                        <!-- JS inserted rows -->
+                    </div>
+                </div>
+
+                <div class="modal-col" style="display: flex; flex-direction: column;">
+                    <h4 style="color: var(--danger); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(239, 68, 68, 0.15); padding-bottom: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+                        Losers (Loss)
+                    </h4>
+                    <div id="modal-losers-list" class="movers-list" style="gap: 8px; overflow-y: auto; max-height: 250px; padding-right: 4px;">
+                        <!-- JS inserted rows -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="prediction.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
