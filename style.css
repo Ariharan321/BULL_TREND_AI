@@ -1,14 +1,14 @@
 :root {
-    --bg-dark: #161920;                 /* Deep slate grey content area background */
-    --bg-darker: #0f1115;               /* Charcoal black/grey base background */
-    --panel-bg: #1c1f26;                /* Solid matte grey card backgrounds */
-    --panel-border: #282d37;            /* Thin slate-grey borders */
+    --bg-dark: #0b0b12;                 /* Main background of dashboard content area */
+    --bg-darker: #08080c;               /* Deep background behind everything */
+    --panel-bg: #11111a;                /* Solid card backgrounds as seen in screenshot */
+    --panel-border: #1d1d2b;            /* Sleek dark borders between components */
     --primary: #3b82f6;                 /* Vibrant Electric Blue for buttons and CTA */
     --primary-hover: #2563eb;           /* Electric blue hover highlight */
-    --text-main: #f9fafb;
-    --text-muted: #8a909d;              /* Slate muted text */
-    --success: #10b981;                 /* Minty green positive flags */
-    --success-bg: rgba(16, 185, 129, 0.08);
+    --text-main: #f8fafc;
+    --text-muted: #718096;              /* Soft dark slate muted text */
+    --success: #00e699;                 /* Bright minty green/teal for positive flags/trends */
+    --success-bg: rgba(0, 230, 153, 0.08);
     --danger: #ef4444;
     --danger-bg: rgba(239, 68, 68, 0.08);
     --font-family: 'Outfit', sans-serif;
@@ -22,8 +22,8 @@ body {
     color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
-    background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.04), transparent 45%),
-                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.02), transparent 45%),
+    background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05), transparent 45%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.02), transparent 45%),
                 var(--bg-darker);
 }
 
@@ -48,7 +48,7 @@ body {
     display: flex;
     flex-direction: column;
     padding: 24px;
-    background-color: #0c0e12 !important;
+    background-color: #06060a !important;
     border-right: 1px solid var(--panel-border) !important;
 }
 
@@ -101,7 +101,7 @@ body {
     transition: all 0.2s ease; font-weight: 500; cursor: pointer;
 }
 .nav-item:hover, .nav-item.active {
-    background: #232832; color: var(--text-main);
+    background: #141420; color: var(--text-main);
 }
 .nav-item.active { 
     border-left: none;
