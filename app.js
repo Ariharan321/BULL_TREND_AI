@@ -301,6 +301,7 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         activeStockDetails = data;
         knowMoreBtn.classList.remove('hidden');
         updateDashboardUI(data.symbol.replace('.NS', ''), data.name, currentPrice, changeValue, changePercent, data.currency);
+        populateTradeForm();
         
         if (!isBackgroundUpdate && !isInitialLoad) {
             symbolInput.value = '';
