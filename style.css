@@ -2075,3 +2075,212 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* --- PROFILE SETTINGS MODAL STYLES --- */
+.profile-modal-sidebar button.profile-tab-btn {
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: left;
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.profile-modal-sidebar button.profile-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+.profile-modal-sidebar button.profile-tab-btn.active {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary);
+    border-left: 3px solid var(--primary);
+    padding-left: 13px; /* Adjust padding to match border */
+}
+
+.profile-modal-sidebar button.profile-tab-btn svg {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.profile-modal-sidebar button.profile-tab-btn:hover svg {
+    transform: scale(1.05);
+}
+
+.profile-tab-content.hidden {
+    display: none !important;
+}
+
+.avatar-preset {
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.avatar-preset:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 14px rgba(59, 130, 246, 0.6);
+}
+
+.avatar-preset.selected {
+    border: 2.5px solid #fff !important;
+    transform: scale(1.15);
+    box-shadow: 0 0 16px var(--primary);
+}
+
+@media (max-width: 650px) {
+    #profile-settings-modal .modal-content {
+        flex-direction: column !important;
+        height: auto !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+    .profile-modal-sidebar {
+        width: 100% !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        padding: 16px !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    .profile-modal-sidebar button.profile-tab-btn {
+        white-space: nowrap;
+        width: auto !important;
+    }
+}
+
+/* Watchlist Compact Accordion Styles */
+.watchlist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.watchlist-item {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.watchlist-item:hover,
+.watchlist-item.expanded {
+    background: #1e293b;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.watchlist-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+.watchlist-item-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 85%;
+}
+
+.watchlist-item-title strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.watchlist-expand-arrow {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    transition: transform 0.25s ease;
+}
+
+.watchlist-item-details {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin-top 0.25s ease;
+}
+
+.watchlist-item:hover .watchlist-item-details,
+.watchlist-item.expanded .watchlist-item-details {
+    max-height: 180px;
+    opacity: 1;
+    margin-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 12px;
+}
+
+.watchlist-details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.detail-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.detail-val {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.watchlist-actions-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-watchlist-action {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-watchlist-action:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--primary);
+}
+
+.btn-watchlist-action.text-danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: var(--danger);
+    color: #f87171 !important;
+}
+
+@media (max-width: 768px) {
+    .watchlist-details-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
