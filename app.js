@@ -297,6 +297,9 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         checkAlerts(currentPrice);
         
         currentStockData = data;
+        if (typeof updateWatchlistButtonState === 'function') {
+            updateWatchlistButtonState(data.symbol);
+        }
         
         if (aiStockNameEl) aiStockNameEl.textContent = data.name || data.symbol;
         if (aiStockTickerEl) aiStockTickerEl.textContent = data.symbol.replace('.NS', '');
@@ -750,21 +753,145 @@ symbolInput.addEventListener('keydown', (e) => {
 });
 
 const POPULAR_STOCKS = [
-    { symbol: 'RELIANCE.NS', name: 'Reliance Industries Ltd', exchange: 'NSE' },
-    { symbol: 'TCS.NS', name: 'Tata Consultancy Services Ltd', exchange: 'NSE' },
-    { symbol: 'HDFCBANK.NS', name: 'HDFC Bank Ltd', exchange: 'NSE' },
-    { symbol: 'ICICIBANK.NS', name: 'ICICI Bank Ltd', exchange: 'NSE' },
-    { symbol: 'INFY.NS', name: 'Infosys Ltd', exchange: 'NSE' },
+    // A
     { symbol: 'AAPL', name: 'Apple Inc.', exchange: 'NASDAQ' },
-    { symbol: 'TSLA', name: 'Tesla Inc.', exchange: 'NASDAQ' },
-    { symbol: 'MSFT', name: 'Microsoft Corporation', exchange: 'NASDAQ' },
-    { symbol: 'NVDA', name: 'NVIDIA Corporation', exchange: 'NASDAQ' },
+    { symbol: 'AMZN', name: 'Amazon.com, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'ADBE', name: 'Adobe Inc.', exchange: 'NASDAQ' },
+    { symbol: 'AMD', name: 'Advanced Micro Devices, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'ADANIPORTS.NS', name: 'Adani Ports & SEZ Ltd', exchange: 'NSE' },
+    { symbol: 'ASIANPAINT.NS', name: 'Asian Paints Ltd', exchange: 'NSE' },
+    { symbol: 'AXISBANK.NS', name: 'Axis Bank Ltd', exchange: 'NSE' },
+    // B
+    { symbol: 'BA', name: 'Boeing Company', exchange: 'NYSE' },
+    { symbol: 'BABA', name: 'Alibaba Group Holding Ltd', exchange: 'NYSE' },
+    { symbol: 'BAC', name: 'Bank of America Corp', exchange: 'NYSE' },
+    { symbol: 'BAJAJ-AUTO.NS', name: 'Bajaj Auto Ltd', exchange: 'NSE' },
+    { symbol: 'BHARTIARTL.NS', name: 'Bharti Airtel Ltd', exchange: 'NSE' },
+    { symbol: 'BPCL.NS', name: 'Bharat Petroleum Corp Ltd', exchange: 'NSE' },
+    // C
+    { symbol: 'C', name: 'Citigroup Inc.', exchange: 'NYSE' },
+    { symbol: 'CSCO', name: 'Cisco Systems, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'CAT', name: 'Caterpillar Inc.', exchange: 'NYSE' },
+    { symbol: 'CVX', name: 'Chevron Corporation', exchange: 'NYSE' },
+    { symbol: 'KO', name: 'Coca-Cola Company', exchange: 'NYSE' },
+    { symbol: 'COALINDIA.NS', name: 'Coal India Ltd', exchange: 'NSE' },
+    { symbol: 'CIPLA.NS', name: 'Cipla Ltd', exchange: 'NSE' },
+    { symbol: 'COLPAL.NS', name: 'Colgate-Palmolive (India) Ltd', exchange: 'NSE' },
+    // D
+    { symbol: 'DIS', name: 'Walt Disney Company', exchange: 'NYSE' },
+    { symbol: 'DHR', name: 'Danaher Corporation', exchange: 'NYSE' },
+    { symbol: 'DIVISLAB.NS', name: 'Divi\'s Laboratories Ltd', exchange: 'NSE' },
+    { symbol: 'DRREDDY.NS', name: 'Dr. Reddy\'s Laboratories Ltd', exchange: 'NSE' },
+    { symbol: 'DE', name: 'Deere & Company', exchange: 'NYSE' },
+    // E
+    { symbol: 'EXC', name: 'Exelon Corporation', exchange: 'NASDAQ' },
+    { symbol: 'EICHERMOT.NS', name: 'Eicher Motors Ltd', exchange: 'NSE' },
+    { symbol: 'ENPH', name: 'Enphase Energy, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'EL', name: 'Estee Lauder Companies Inc.', exchange: 'NYSE' },
+    // F
+    { symbol: 'F', name: 'Ford Motor Company', exchange: 'NYSE' },
+    { symbol: 'FDX', name: 'FedEx Corporation', exchange: 'NYSE' },
+    { symbol: 'FCX', name: 'Freeport-McMoRan Inc.', exchange: 'NYSE' },
+    // G
     { symbol: 'GOOGL', name: 'Alphabet Inc. (Google)', exchange: 'NASDAQ' },
+    { symbol: 'GE', name: 'General Electric Company', exchange: 'NYSE' },
+    { symbol: 'GRASIM.NS', name: 'Grasim Industries Ltd', exchange: 'NSE' },
+    { symbol: 'GILD', name: 'Gilead Sciences, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'GS', name: 'Goldman Sachs Group, Inc.', exchange: 'NYSE' },
+    // H
+    { symbol: 'HDFCBANK.NS', name: 'HDFC Bank Ltd', exchange: 'NSE' },
+    { symbol: 'HINDALCO.NS', name: 'Hindalco Industries Ltd', exchange: 'NSE' },
+    { symbol: 'HINDUNILVR.NS', name: 'Hindustan Unilever Ltd', exchange: 'NSE' },
+    { symbol: 'HON', name: 'Honeywell International Inc.', exchange: 'NASDAQ' },
+    { symbol: 'HPQ', name: 'HP Inc.', exchange: 'NYSE' },
+    { symbol: 'HD', name: 'Home Depot, Inc.', exchange: 'NYSE' },
+    // I
+    { symbol: 'INFY.NS', name: 'Infosys Ltd', exchange: 'NSE' },
+    { symbol: 'ICICIBANK.NS', name: 'ICICI Bank Ltd', exchange: 'NSE' },
+    { symbol: 'IBM', name: 'International Business Machines Corp', exchange: 'NYSE' },
+    { symbol: 'INTC', name: 'Intel Corporation', exchange: 'NASDAQ' },
+    { symbol: 'INDUSINDBK.NS', name: 'IndusInd Bank Ltd', exchange: 'NSE' },
+    { symbol: 'ITC.NS', name: 'ITC Ltd', exchange: 'NSE' },
+    { symbol: 'IOC.NS', name: 'Indian Oil Corporation Ltd', exchange: 'NSE' },
+    // J
+    { symbol: 'JNJ', name: 'Johnson & Johnson', exchange: 'NYSE' },
+    { symbol: 'JPM', name: 'JPMorgan Chase & Co.', exchange: 'NYSE' },
+    { symbol: 'JSWSTEEL.NS', name: 'JSW Steel Ltd', exchange: 'NSE' },
+    { symbol: 'JD', name: 'JD.com, Inc.', exchange: 'NASDAQ' },
+    // K
+    { symbol: 'KOTAKBANK.NS', name: 'Kotak Mahindra Bank Ltd', exchange: 'NSE' },
+    { symbol: 'K', name: 'Kellogg Company', exchange: 'NYSE' },
+    { symbol: 'KEY', name: 'KeyCorp', exchange: 'NYSE' },
+    { symbol: 'KMB', name: 'Kimberly-Clark Corporation', exchange: 'NYSE' },
+    // L
+    { symbol: 'LT.NS', name: 'Larsen & Toubro Ltd', exchange: 'NSE' },
+    { symbol: 'LTIM.NS', name: 'LTIMindtree Ltd', exchange: 'NSE' },
+    { symbol: 'LLY', name: 'Eli Lilly and Company', exchange: 'NYSE' },
+    { symbol: 'LMT', name: 'Lockheed Martin Corporation', exchange: 'NYSE' },
+    { symbol: 'LOW', name: 'Lowe\'s Companies, Inc.', exchange: 'NYSE' },
+    // M
+    { symbol: 'MSFT', name: 'Microsoft Corporation', exchange: 'NASDAQ' },
+    { symbol: 'META', name: 'Meta Platforms, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'MRF.NS', name: 'MRF Ltd', exchange: 'NSE' },
+    { symbol: 'MARUTI.NS', name: 'Maruti Suzuki India Ltd', exchange: 'NSE' },
+    { symbol: 'MCD', name: 'McDonald\'s Corporation', exchange: 'NYSE' },
+    { symbol: 'MRK', name: 'Merck & Co., Inc.', exchange: 'NYSE' },
+    // N
+    { symbol: 'NVDA', name: 'NVIDIA Corporation', exchange: 'NASDAQ' },
+    { symbol: 'NFLX', name: 'Netflix, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'NKE', name: 'NIKE, Inc.', exchange: 'NYSE' },
+    { symbol: 'NESTLEIND.NS', name: 'Nestle India Ltd', exchange: 'NSE' },
+    { symbol: 'NTPC.NS', name: 'NTPC Ltd', exchange: 'NSE' },
     { symbol: 'NARMADA.BO', name: 'Narmada Agrobase Limited', exchange: 'BSE' },
+    // O
+    { symbol: 'ONGC.NS', name: 'Oil & Natural Gas Corp Ltd', exchange: 'NSE' },
+    { symbol: 'ORCL', name: 'Oracle Corporation', exchange: 'NYSE' },
+    { symbol: 'ODFL', name: 'Old Dominion Freight Line', exchange: 'NASDAQ' },
+    { symbol: 'O', name: 'Realty Income Corporation', exchange: 'NYSE' },
+    // P
+    { symbol: 'PFE', name: 'Pfizer Inc.', exchange: 'NYSE' },
+    { symbol: 'PG', name: 'Procter & Gamble Co.', exchange: 'NYSE' },
+    { symbol: 'PEP', name: 'PepsiCo, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'PYPL', name: 'PayPal Holdings, Inc.', exchange: 'NASDAQ' },
+    { symbol: 'POWERGRID.NS', name: 'Power Grid Corp of India Ltd', exchange: 'NSE' },
+    // Q
+    { symbol: 'QCOM', name: 'Qualcomm Inc.', exchange: 'NASDAQ' },
+    { symbol: 'QSR', name: 'Restaurant Brands International', exchange: 'NYSE' },
+    // R
+    { symbol: 'RELIANCE.NS', name: 'Reliance Industries Ltd', exchange: 'NSE' },
+    { symbol: 'RTX', name: 'Raytheon Technologies Corp', exchange: 'NYSE' },
+    // S
     { symbol: 'SUNPHARMA.NS', name: 'Sun Pharmaceutical Industries Ltd', exchange: 'NSE' },
-    { symbol: 'TATAMOTORS.NS', name: 'Tata Motors Ltd', exchange: 'NSE' },
     { symbol: 'SBIN.NS', name: 'State Bank of India', exchange: 'NSE' },
-    { symbol: 'BHARTIARTL.NS', name: 'Bharti Airtel Ltd', exchange: 'NSE' }
+    { symbol: 'SBUX', name: 'Starbucks Corporation', exchange: 'NASDAQ' },
+    { symbol: 'SONY', name: 'Sony Group Corporation', exchange: 'NYSE' },
+    { symbol: 'CRM', name: 'Salesforce, Inc.', exchange: 'NYSE' },
+    // T
+    { symbol: 'TCS.NS', name: 'Tata Consultancy Services Ltd', exchange: 'NSE' },
+    { symbol: 'TSLA', name: 'Tesla Inc.', exchange: 'NASDAQ' },
+    { symbol: 'TATAMOTORS.NS', name: 'Tata Motors Ltd', exchange: 'NSE' },
+    { symbol: 'TECHM.NS', name: 'Tech Mahindra Ltd', exchange: 'NSE' },
+    { symbol: 'TITAN.NS', name: 'Titan Company Ltd', exchange: 'NSE' },
+    { symbol: 'TATASTEEL.NS', name: 'Tata Steel Ltd', exchange: 'NSE' },
+    { symbol: 'TXN', name: 'Texas Instruments Inc.', exchange: 'NASDAQ' },
+    // U
+    { symbol: 'ULTRACEMCO.NS', name: 'UltraTech Cement Ltd', exchange: 'NSE' },
+    { symbol: 'UPL.NS', name: 'UPL Ltd', exchange: 'NSE' },
+    { symbol: 'UNH', name: 'UnitedHealth Group Inc.', exchange: 'NYSE' },
+    { symbol: 'UPS', name: 'United Parcel Service, Inc.', exchange: 'NYSE' },
+    { symbol: 'UBER', name: 'Uber Technologies, Inc.', exchange: 'NYSE' },
+    // W
+    { symbol: 'WIPRO.NS', name: 'Wipro Ltd', exchange: 'NSE' },
+    { symbol: 'WMT', name: 'Walmart Inc.', exchange: 'NYSE' },
+    { symbol: 'WFC', name: 'Wells Fargo & Company', exchange: 'NYSE' },
+    // X
+    { symbol: 'XOM', name: 'Exxon Mobil Corporation', exchange: 'NYSE' },
+    { symbol: 'XPEV', name: 'XPeng Inc.', exchange: 'NYSE' },
+    // Y
+    { symbol: 'YUM', name: 'Yum! Brands, Inc.', exchange: 'NYSE' },
+    // Z
+    { symbol: 'ZTS', name: 'Zoetis Inc.', exchange: 'NYSE' },
+    { symbol: 'ZEEL.NS', name: 'Zee Entertainment Enterprises Ltd', exchange: 'NSE' }
 ];
 
 const SEARCH_CACHE = {};
@@ -812,12 +939,11 @@ symbolInput.addEventListener('input', () => {
     // 1. Get instant matches from our local popular stocks database
     let localMatches = [];
     if (query.length === 1) {
-        // For single-letter queries, ONLY return matches where the symbol or any word in the name starts with the letter.
-        // This prevents irrelevant matches (e.g. typing 'a' shouldn't return 'Reliance' or 'TCS' just because they contain 'a').
+        // For single-letter queries, ONLY return matches where the symbol or the company name starts with the letter.
+        // This prevents loose inner-word matching of common terms (e.g. 'c' matching 'Microsoft Corporation' because of 'Corporation').
         localMatches = POPULAR_STOCKS.filter(item => 
             item.symbol.toLowerCase().startsWith(query) || 
-            item.name.toLowerCase().startsWith(query) ||
-            item.name.toLowerCase().split(' ').some(word => word.startsWith(query))
+            item.name.toLowerCase().startsWith(query)
         );
     } else {
         // For longer queries, rank matches: StartsWith Symbol -> StartsWith Name/Word -> Contains
@@ -842,11 +968,11 @@ symbolInput.addEventListener('input', () => {
     }
     
     // Render local matches instantly to eliminate any lag!
-    renderSuggestions(localMatches.slice(0, 6));
+    renderSuggestions(localMatches.slice(0, 10));
     
     // 2. Fetch from backend API with short debounce and client caching
     searchTimeout = setTimeout(async () => {
-        if (query.length < 2) return; // Don't hit backend for single characters
+        if (query.length < 1) return;
         
         try {
             let results;
@@ -866,14 +992,23 @@ symbolInput.addEventListener('input', () => {
             results.forEach(item => {
                 const sym = item.symbol.toLowerCase();
                 const name = item.name.toLowerCase();
+                
+                // For single-letter queries, strictly enforce starting with the letter
+                if (query.length === 1) {
+                    const matchesRule = sym.startsWith(query) || 
+                                        name.startsWith(query) || 
+                                        name.split(' ').some(word => word.startsWith(query));
+                    if (!matchesRule) return;
+                }
+                
                 if (!seenSymbols.has(sym)) {
                     merged.push(item);
                     seenSymbols.add(sym);
                 }
             });
             
-            // Render the final combined list (up to 6 items)
-            renderSuggestions(merged.slice(0, 6));
+            // Render the final combined list (up to 10 items)
+            renderSuggestions(merged.slice(0, 10));
         } catch(e) {
             console.error("Suggestions error:", e);
         }
@@ -1047,18 +1182,14 @@ function showAuthScreen(screenId) {
     }
 }
 
-function enterDashboard(mode, username = '') {
+function enterDashboard(mode, name = '', username = '') {
     authOverlay.classList.add('hidden');
     
     headerAuthButtons.classList.add('hidden');
     headerUserProfile.classList.remove('hidden');
-    if (mode === 'logged_in' && username) {
-        userDisplayName.textContent = username;
-        const ddName = document.getElementById('dropdown-name');
-        const ddUser = document.getElementById('dropdown-username');
-        if (ddName) ddName.textContent = username;
-        if (ddUser) ddUser.textContent = username;
-    }
+    
+    // Perform initial profile UI update
+    updateProfileUI();
     
     if (!appInitialized) {
         appInitialized = true;
@@ -1066,9 +1197,23 @@ function enterDashboard(mode, username = '') {
         fetchStockData(currentSymbol, false, true);
         loadTop10();
         
+        // Initialize Watchlist
+        loadWatchlist();
+        
+        // Watchlist toggle handler
+        const addToWatchlistBtn = document.getElementById('add-to-watchlist-btn');
+        if (addToWatchlistBtn) {
+            addToWatchlistBtn.addEventListener('click', () => {
+                if (currentStockData && currentStockData.symbol) {
+                    toggleWatchlist(currentStockData.symbol);
+                }
+            });
+        }
+        
         if (updateInterval) clearInterval(updateInterval);
         updateInterval = setInterval(() => {
             fetchStockData(currentSymbol, true);
+            loadWatchlist(); // Auto-refresh watchlist prices in the background
         }, 5000);
     }
 }
@@ -1081,13 +1226,14 @@ function handleLogin() {
     if (password.length < 4) { showToast('Password must be at least 4 characters long.', 'error'); return; }
     
     sessionStorage.setItem('auth_mode', 'logged_in');
+    sessionStorage.setItem('auth_name', username);
     sessionStorage.setItem('auth_username', username);
     showToast(`Welcome back, ${username}!`, 'success');
     
     loginUsernameInput.value = '';
     loginPasswordInput.value = '';
     
-    enterDashboard('logged_in', username);
+    enterDashboard('logged_in', username, username);
 }
 
 function handleSignup() {
@@ -1102,6 +1248,7 @@ function handleSignup() {
     if (password !== confirmPassword) { showToast('Passwords do not match.', 'error'); return; }
     
     sessionStorage.setItem('auth_mode', 'logged_in');
+    sessionStorage.setItem('auth_name', name);
     sessionStorage.setItem('auth_username', username);
     showToast('Account created successfully!', 'success');
     
@@ -1110,17 +1257,20 @@ function handleSignup() {
     signupPasswordInput.value = '';
     signupConfirmPasswordInput.value = '';
     
-    enterDashboard('logged_in', username);
+    enterDashboard('logged_in', name, username);
 }
 
 function handleGuestMode() {
     sessionStorage.setItem('auth_mode', 'guest');
+    sessionStorage.removeItem('auth_name');
+    sessionStorage.removeItem('auth_username');
     showToast('Continuing as guest. Log in anytime to save settings.', 'success');
     enterDashboard('guest');
 }
 
 function handleLogout() {
     sessionStorage.removeItem('auth_mode');
+    sessionStorage.removeItem('auth_name');
     sessionStorage.removeItem('auth_username');
     
     if (updateInterval) {
@@ -2028,10 +2178,11 @@ if (modalOverlay) {
 // Initialize application on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     const savedMode = sessionStorage.getItem('auth_mode');
+    const savedName = sessionStorage.getItem('auth_name') || '';
     const savedUsername = sessionStorage.getItem('auth_username') || '';
     
     if (savedMode) {
-        enterDashboard(savedMode, savedUsername);
+        enterDashboard(savedMode, savedName, savedUsername);
     } else {
         showAuthScreen('selection');
     }
@@ -2479,4 +2630,451 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAlertHistory();
     // Refresh marquee every 60 seconds
     setInterval(initMarquee, 60000);
+    
+    // Initial profile display updates
+    updateProfileUI();
 });
+
+// --- PROFILE SETTINGS MODAL ENGINE ---
+function updateProfileUI() {
+    const name = sessionStorage.getItem('auth_name') || 'Guest User';
+    const username = sessionStorage.getItem('auth_username') || 'guest';
+    const mode = sessionStorage.getItem('auth_mode') || 'guest';
+    const avatar = sessionStorage.getItem('auth_avatar') || '';
+    
+    // Update header profile display
+    if (userDisplayName) userDisplayName.textContent = mode === 'logged_in' ? name : 'Guest';
+    
+    const ddName = document.getElementById('dropdown-name');
+    const ddUser = document.getElementById('dropdown-username');
+    if (ddName) ddName.textContent = mode === 'logged_in' ? name : 'Guest User';
+    if (ddUser) ddUser.textContent = mode === 'logged_in' ? `@${username}` : 'guest';
+    
+    const viewName = document.getElementById('profile-view-name');
+    const viewUser = document.getElementById('profile-view-username');
+    const viewMode = document.getElementById('profile-view-mode');
+    
+    if (viewName) viewName.textContent = name;
+    if (viewUser) viewUser.textContent = username ? `@${username}` : 'guest';
+    if (viewMode) viewMode.textContent = mode === 'logged_in' ? 'Registered User' : 'Guest Mode';
+    
+    // Update inputs in edit tab
+    const editNameInput = document.getElementById('edit-profile-name');
+    const editUserInput = document.getElementById('edit-profile-username');
+    if (editNameInput) editNameInput.value = name;
+    if (editUserInput) editUserInput.value = username;
+    
+    // Apply avatars
+    const headerAvatar = document.getElementById('header-profile-avatar-container');
+    const dropdownAvatar = document.getElementById('dropdown-profile-avatar-container');
+    const viewAvatar = document.getElementById('profile-view-avatar');
+    const editAvatar = document.getElementById('profile-edit-avatar');
+    
+    const initial = (name || username || 'G').charAt(0).toUpperCase();
+    
+    const applyAvatar = (container, size) => {
+        if (!container) return;
+        if (avatar && avatar.startsWith('data:image')) {
+            container.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            container.style.background = 'transparent';
+        } else if (avatar && avatar.startsWith('linear-gradient')) {
+            container.innerHTML = `<div style="font-weight: 700; color: #fff; font-size: ${size === 'large' ? '1.5rem' : size === 'medium' ? '1.25rem' : '0.9rem'};">${initial}</div>`;
+            container.style.background = avatar;
+        } else {
+            const svgSize = size === 'large' ? 44 : size === 'medium' ? 22 : 16;
+            container.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+            container.style.background = 'rgba(59, 130, 246, 0.1)';
+        }
+    };
+    
+    applyAvatar(headerAvatar, 'small');
+    applyAvatar(dropdownAvatar, 'medium');
+    applyAvatar(viewAvatar, 'medium');
+    applyAvatar(editAvatar, 'large');
+}
+
+function showProfileTab(tabId) {
+    // Hide all tab contents
+    document.querySelectorAll('.profile-tab-content').forEach(content => content.classList.add('hidden'));
+    // Deactivate all sidebar tab buttons
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Show chosen tab content
+    const selectedContent = document.getElementById(`tab-${tabId}`);
+    if (selectedContent) selectedContent.classList.remove('hidden');
+    
+    // Activate chosen sidebar button
+    const selectedBtn = document.querySelector(`.profile-tab-btn[data-tab="${tabId}"]`);
+    if (selectedBtn) selectedBtn.classList.add('active');
+}
+
+const profileSettingsModal = document.getElementById('profile-settings-modal');
+
+function openProfileModal(tabId) {
+    if (!profileSettingsModal) return;
+    profileSettingsModal.classList.remove('hidden');
+    showProfileTab(tabId);
+    updateProfileUI();
+    
+    // Set preset selection borders
+    const currentAvatar = sessionStorage.getItem('auth_avatar') || '';
+    document.querySelectorAll('.avatar-preset').forEach(p => p.classList.remove('selected'));
+    if (currentAvatar && currentAvatar.startsWith('linear-gradient')) {
+        const selectedPreset = document.querySelector(`.avatar-preset[data-gradient="${currentAvatar}"]`);
+        if (selectedPreset) selectedPreset.classList.add('selected');
+    }
+    
+    // Reset password fields
+    const pwdCurrent = document.getElementById('change-pwd-current');
+    const pwdNew = document.getElementById('change-pwd-new');
+    const pwdConfirm = document.getElementById('change-pwd-confirm');
+    if (pwdCurrent) pwdCurrent.value = '';
+    if (pwdNew) pwdNew.value = '';
+    if (pwdConfirm) pwdConfirm.value = '';
+    
+    // Set notification checkbox states
+    const emailAlerts = document.getElementById('notify-email-alerts');
+    const smsAlerts = document.getElementById('notify-sms-alerts');
+    const dailyDigest = document.getElementById('notify-daily-digest');
+    
+    if (emailAlerts) emailAlerts.checked = sessionStorage.getItem('notify_email') !== 'false';
+    if (smsAlerts) smsAlerts.checked = sessionStorage.getItem('notify_sms') !== 'false';
+    if (dailyDigest) dailyDigest.checked = sessionStorage.getItem('notify_digest') === 'true';
+}
+
+// Bind dropdown options click events
+const btnViewProfile = document.getElementById('btn-view-profile');
+const btnEditProfile = document.getElementById('btn-edit-profile');
+const btnChangePic = document.getElementById('btn-change-pic');
+const btnChangePwd = document.getElementById('btn-change-pwd');
+const btnNotifySettings = document.getElementById('btn-notify-settings');
+
+if (btnViewProfile) btnViewProfile.addEventListener('click', (e) => { e.stopPropagation(); openProfileModal('view-profile'); });
+if (btnEditProfile) btnEditProfile.addEventListener('click', (e) => { e.stopPropagation(); openProfileModal('edit-profile'); });
+if (btnChangePic) btnChangePic.addEventListener('click', (e) => { e.stopPropagation(); openProfileModal('change-pic'); });
+if (btnChangePwd) btnChangePwd.addEventListener('click', (e) => { e.stopPropagation(); openProfileModal('change-password'); });
+if (btnNotifySettings) btnNotifySettings.addEventListener('click', (e) => { e.stopPropagation(); openProfileModal('notify-settings'); });
+
+// Bind sidebar button clicks
+document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const tabId = e.currentTarget.getAttribute('data-tab');
+        showProfileTab(tabId);
+    });
+});
+
+// Close modal handlers
+const profileModalCloseBtn = document.getElementById('profile-modal-close-btn');
+if (profileModalCloseBtn) {
+    profileModalCloseBtn.addEventListener('click', () => {
+        profileSettingsModal.classList.add('hidden');
+    });
+}
+if (profileSettingsModal) {
+    profileSettingsModal.addEventListener('click', (e) => {
+        if (e.target === profileSettingsModal) {
+            profileSettingsModal.classList.add('hidden');
+        }
+    });
+}
+
+// Save Profile Edit Changes
+const saveProfileBtn = document.getElementById('save-profile-btn');
+if (saveProfileBtn) {
+    saveProfileBtn.addEventListener('click', () => {
+        const nameInput = document.getElementById('edit-profile-name');
+        const newName = nameInput ? nameInput.value.trim() : '';
+        if (!newName) {
+            showToast('Full Name cannot be empty.', 'error');
+            return;
+        }
+        
+        sessionStorage.setItem('auth_name', newName);
+        updateProfileUI();
+        showToast('Profile info updated successfully.', 'success');
+    });
+}
+
+// Save Notification Preferences
+const saveNotifyBtn = document.getElementById('save-notify-btn');
+if (saveNotifyBtn) {
+    saveNotifyBtn.addEventListener('click', () => {
+        const emailAlerts = document.getElementById('notify-email-alerts');
+        const smsAlerts = document.getElementById('notify-sms-alerts');
+        const dailyDigest = document.getElementById('notify-daily-digest');
+        
+        if (emailAlerts) sessionStorage.setItem('notify_email', emailAlerts.checked);
+        if (smsAlerts) sessionStorage.setItem('notify_sms', smsAlerts.checked);
+        if (dailyDigest) sessionStorage.setItem('notify_digest', dailyDigest.checked);
+        
+        showToast('Notification preferences saved.', 'success');
+    });
+}
+
+// Update Password Handler (Simulated)
+const savePasswordBtn = document.getElementById('save-password-btn');
+if (savePasswordBtn) {
+    savePasswordBtn.addEventListener('click', () => {
+        const pwdCurrent = document.getElementById('change-pwd-current');
+        const pwdNew = document.getElementById('change-pwd-new');
+        const pwdConfirm = document.getElementById('change-pwd-confirm');
+        
+        const currentVal = pwdCurrent ? pwdCurrent.value : '';
+        const newVal = pwdNew ? pwdNew.value : '';
+        const confirmVal = pwdConfirm ? pwdConfirm.value : '';
+        
+        const mode = sessionStorage.getItem('auth_mode') || 'guest';
+        if (mode === 'guest') {
+            showToast('Passwords cannot be changed in guest mode. Create an account to save settings.', 'error');
+            return;
+        }
+        
+        if (!currentVal || !newVal || !confirmVal) {
+            showToast('Please fill out all password fields.', 'error');
+            return;
+        }
+        
+        if (newVal.length < 4) {
+            showToast('New password must be at least 4 characters long.', 'error');
+            return;
+        }
+        
+        if (newVal !== confirmVal) {
+            showToast('New passwords do not match.', 'error');
+            return;
+        }
+        
+        showToast('Password updated successfully.', 'success');
+        pwdCurrent.value = '';
+        pwdNew.value = '';
+        pwdConfirm.value = '';
+    });
+}
+
+// Change Profile Picture (Gradients & Custom Image Upload)
+const triggerFileInputBtn = document.getElementById('trigger-file-input-btn');
+const profilePicFileInput = document.getElementById('profile-pic-file-input');
+const removeProfilePicBtn = document.getElementById('remove-profile-pic-btn');
+
+if (triggerFileInputBtn && profilePicFileInput) {
+    triggerFileInputBtn.addEventListener('click', () => {
+        profilePicFileInput.click();
+    });
+}
+
+if (profilePicFileInput) {
+    profilePicFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Image size must be less than 2MB.', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64Image = evt.target.result;
+                sessionStorage.setItem('auth_avatar', base64Image);
+                
+                // Remove selected border from presets
+                document.querySelectorAll('.avatar-preset').forEach(p => p.classList.remove('selected'));
+                
+                updateProfileUI();
+                showToast('Profile photo uploaded successfully.', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (removeProfilePicBtn) {
+    removeProfilePicBtn.addEventListener('click', () => {
+        sessionStorage.removeItem('auth_avatar');
+        document.querySelectorAll('.avatar-preset').forEach(p => p.classList.remove('selected'));
+        updateProfileUI();
+        showToast('Profile photo removed.', 'success');
+    });
+}
+
+// Preset Gradient clicks
+document.querySelectorAll('.avatar-preset').forEach(preset => {
+    preset.addEventListener('click', (e) => {
+        const gradient = e.currentTarget.getAttribute('data-gradient');
+        sessionStorage.setItem('auth_avatar', gradient);
+        
+        document.querySelectorAll('.avatar-preset').forEach(p => p.classList.remove('selected'));
+        preset.classList.add('selected');
+        
+        updateProfileUI();
+        showToast('Profile theme updated.', 'success');
+    });
+});
+
+// ==========================================
+// WATCHLIST SECTION SYSTEM
+// ==========================================
+let watchlist = JSON.parse(localStorage.getItem('bt_watchlist') || '[]');
+if (watchlist.length === 0) {
+    watchlist = ['RELIANCE.NS', 'AAPL', 'GOOGL'];
+    localStorage.setItem('bt_watchlist', JSON.stringify(watchlist));
+}
+
+async function loadWatchlist() {
+    const container = document.getElementById('watchlist-container');
+    if (!container) return;
+    
+    if (watchlist.length === 0) {
+        container.innerHTML = `
+            <div class="watchlist-empty-state" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                Your watchlist is empty. Search a stock and click "Track" to add it here.
+            </div>
+        `;
+        return;
+    }
+    
+    try {
+        const symbolsParam = watchlist.join(',');
+        const res = await fetch(`/.netlify/functions/stock?action=top10&symbols=${encodeURIComponent(symbolsParam)}`);
+        const data = await res.json();
+        
+        // Preserve open item class if loaded
+        const openSymbol = document.querySelector('.watchlist-item.expanded')?.getAttribute('data-symbol') || null;
+        
+        container.innerHTML = '';
+        
+        data.forEach(item => {
+            const symbolBase = item.symbol.replace('.NS', '').replace('.BO', '');
+            const isPositive = item.percent_change >= 0;
+            const changeClass = isPositive ? 'positive' : 'negative';
+            const prefix = isPositive ? '+' : '';
+            
+            const div = document.createElement('div');
+            // If the item was expanded, keep it expanded
+            div.className = `watchlist-item glass-panel${openSymbol === item.symbol ? ' expanded' : ''}`;
+            div.setAttribute('data-symbol', item.symbol);
+            
+            div.innerHTML = `
+                <div class="watchlist-item-header">
+                    <span class="watchlist-item-title"><strong>${symbolBase}</strong> - ${item.shortName || item.name}</span>
+                    <span class="watchlist-expand-arrow" style="transform: ${openSymbol === item.symbol ? 'rotate(180deg)' : 'rotate(0deg)'}">▼</span>
+                </div>
+                
+                <div class="watchlist-item-details">
+                    <div class="watchlist-details-grid">
+                        <div class="detail-box">
+                            <span class="detail-label">Current Price</span>
+                            <span class="detail-val">${formatStockCurrency(item.price, item.currency)}</span>
+                        </div>
+                        <div class="detail-box">
+                            <span class="detail-label">24h Change</span>
+                            <span class="detail-val ${changeClass}">${prefix}${item.change.toFixed(2)} (${prefix}${item.percent_change.toFixed(2)}%)</span>
+                        </div>
+                        <div class="detail-box">
+                            <span class="detail-label">Prev Close</span>
+                            <span class="detail-val">${formatStockCurrency(item.prevClose, item.currency)}</span>
+                        </div>
+                        <div class="detail-box">
+                            <span class="detail-label">Exchange</span>
+                            <span class="detail-val">${item.currency === 'INR' ? 'NSE' : 'NASDAQ'}</span>
+                        </div>
+                    </div>
+                    <div class="watchlist-actions-row">
+                        <button class="btn-watchlist-action btn-details" data-symbol="${item.symbol}">Details</button>
+                        <button class="btn-watchlist-action btn-alert" data-symbol="${item.symbol}">Set Alert</button>
+                        <button class="btn-watchlist-action btn-remove text-danger" data-symbol="${item.symbol}">Remove</button>
+                    </div>
+                </div>
+            `;
+            
+            // Toggle expanded on click
+            div.querySelector('.watchlist-item-header').addEventListener('click', (e) => {
+                // Toggle clicked item
+                const isExpanding = !div.classList.contains('expanded');
+                
+                // Close all others
+                document.querySelectorAll('.watchlist-item').forEach(other => {
+                    other.classList.remove('expanded');
+                    const otherArrow = other.querySelector('.watchlist-expand-arrow');
+                    if (otherArrow) otherArrow.style.transform = 'rotate(0deg)';
+                });
+                
+                if (isExpanding) {
+                    div.classList.add('expanded');
+                    const arrow = div.querySelector('.watchlist-expand-arrow');
+                    if (arrow) arrow.style.transform = 'rotate(180deg)';
+                }
+            });
+            
+            // Wire up actions
+            div.querySelector('.btn-details').addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentSymbol = item.symbol;
+                fetchStockData(currentSymbol);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            div.querySelector('.btn-alert').addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentSymbol = item.symbol;
+                fetchStockData(currentSymbol);
+                const alertsTab = document.querySelector('[data-target="view-alerts"]');
+                if (alertsTab) alertsTab.click();
+            });
+            
+            div.querySelector('.btn-remove').addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeFromWatchlist(item.symbol);
+            });
+            
+            container.appendChild(div);
+        });
+    } catch (e) {
+        console.error("Watchlist fetch error:", e);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: var(--danger);">
+                Failed to load watchlist data.
+            </div>
+        `;
+    }
+}
+
+function removeFromWatchlist(symbol) {
+    const idx = watchlist.indexOf(symbol);
+    if (idx > -1) {
+        watchlist.splice(idx, 1);
+        localStorage.setItem('bt_watchlist', JSON.stringify(watchlist));
+        const symbolBase = symbol.replace('.NS', '').replace('.BO', '');
+        showToast(`${symbolBase} removed from watchlist.`, 'success');
+        updateWatchlistButtonState(symbol);
+        loadWatchlist();
+    }
+}
+
+function toggleWatchlist(symbol) {
+    const idx = watchlist.indexOf(symbol);
+    const symbolBase = symbol.replace('.NS', '').replace('.BO', '');
+    
+    if (idx > -1) {
+        watchlist.splice(idx, 1);
+        localStorage.setItem('bt_watchlist', JSON.stringify(watchlist));
+        showToast(`${symbolBase} removed from watchlist.`, 'success');
+    } else {
+        watchlist.push(symbol);
+        localStorage.setItem('bt_watchlist', JSON.stringify(watchlist));
+        showToast(`${symbolBase} added to watchlist.`, 'success');
+    }
+    updateWatchlistButtonState(symbol);
+    loadWatchlist();
+}
+
+function updateWatchlistButtonState(symbol) {
+    const btn = document.getElementById('add-to-watchlist-btn');
+    if (!btn) return;
+    
+    if (watchlist.includes(symbol)) {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg><span>Watching</span>`;
+        btn.classList.add('active');
+    } else {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg><span>Watch</span>`;
+        btn.classList.remove('active');
+    }
+}
