@@ -652,7 +652,7 @@ function setAlert() {
     
     const targetPrice = parseFloat(priceStr);
     activeAlert = { price: targetPrice, condition, email, currency: currentStockData ? currentStockData.currency : 'INR' };
-    const condText = condition === 'above' ? 'goes above (^)' : (condition === 'below' ? 'drops below (v)' : 'equals (=)');
+    const condText = condition === 'above' ? 'goes above (^)' : (condition === 'below' ? 'drops below (˅)' : 'equals (=)');
     activeAlertText.innerHTML = `Alert when price <strong>${condText}</strong> ${formatStockCurrency(targetPrice, activeAlert.currency)} (Email to: <strong>${email}</strong>)`;
     activeAlertContainer.classList.remove('hidden');
     alertPriceInput.value = '';
