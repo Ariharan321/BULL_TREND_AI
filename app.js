@@ -229,6 +229,30 @@ const TOP_10_SYMBOLS = [
     'AAPL', 'TSLA', 'MSFT', 'NVDA', 'GOOGL'
 ];
 
+let currentChartRange = '2y';
+
+function filterChartDataByRange(labels, prices, range) {
+    let filteredPrices = [...prices];
+    let filteredLabels = [...labels];
+    
+    if (range === '1d' || range === '2y') {
+        return { labels: filteredLabels, prices: filteredPrices };
+    } else if (range === '1m') {
+        const count = Math.min(filteredPrices.length, 20);
+        return { labels: filteredLabels.slice(-count), prices: filteredPrices.slice(-count) };
+    } else if (range === '3m') {
+        const count = Math.min(filteredPrices.length, 60);
+        return { labels: filteredLabels.slice(-count), prices: filteredPrices.slice(-count) };
+    } else if (range === '6m') {
+        const count = Math.min(filteredPrices.length, 120);
+        return { labels: filteredLabels.slice(-count), prices: filteredPrices.slice(-count) };
+    } else if (range === '1y') {
+        const count = Math.min(filteredPrices.length, 250);
+        return { labels: filteredLabels.slice(-count), prices: filteredPrices.slice(-count) };
+    }
+    return { labels: filteredLabels, prices: filteredPrices };
+}
+
 // Fetch Main Chart Data (Using Netlify Backend)
 async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad = false) {
     try {
@@ -256,7 +280,9 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         }
 
         let data;
-        const url = `/.netlify/functions/stock?action=chart&symbol=${cleanSymbol}`;
+        const range = (currentChartRange === '1d') ? '1d' : '2y';
+        const interval = (currentChartRange === '1d') ? '2m' : '1d';
+        const url = `/.netlify/functions/stock?action=chart&symbol=${cleanSymbol}&range=${range}&interval=${interval}`;
         const response = await fetch(url).catch(() => ({ ok: false }));
         
         if (response.ok) {
@@ -280,18 +306,18 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
             symbolInput.value = '';
         }
         
-        if (!isBackgroundUpdate) {
-            document.querySelectorAll('.filter-btn').forEach(b => {
-                if (b.getAttribute('data-range') === '2y') {
-                    b.classList.add('active');
-                } else {
-                    b.classList.remove('active');
-                }
-            });
-        }
+        // Ensure the correct filter button is marked active
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            if (b.getAttribute('data-range') === currentChartRange) {
+                b.classList.add('active');
+            } else {
+                b.classList.remove('active');
+            }
+        });
         
         if (data.prices && data.prices.length > 0) {
-            updateChart(data.labels, data.prices, changeValue >= 0, data.currency);
+            const filteredData = filterChartDataByRange(data.labels, data.prices, currentChartRange);
+            updateChart(filteredData.labels, filteredData.prices, changeValue >= 0, data.currency);
         }
         
         checkAlerts(currentPrice);
@@ -1028,6 +1054,7 @@ searchBtn.addEventListener('click', () => {
     if (val) {
         currentSymbol = val;
         suggestionsBox.classList.add('hidden');
+        currentChartRange = '2y'; // Reset to default 2y range on new search
         fetchStockData(currentSymbol);
     }
 });
@@ -1050,36 +1077,21 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         e.target.classList.add('active');
         
-        if (!currentStockData || !currentStockData.prices || currentStockData.prices.length === 0) return;
+        const oldRange = currentChartRange;
+        currentChartRange = range;
         
-        let filteredPrices = [...currentStockData.prices];
-        let filteredLabels = [...currentStockData.labels];
+        // If switching to/from 1d, we MUST fetch fresh data since intraday and historical data are different API payloads
+        const needsFetch = (oldRange === '1d' || range === '1d');
         
-        if (range === '1m') {
-            // Last 1 month (~20 trading days)
-            const count = Math.min(filteredPrices.length, 20);
-            filteredPrices = filteredPrices.slice(-count);
-            filteredLabels = filteredLabels.slice(-count);
-        } else if (range === '3m') {
-            // Last 3 months (~60 trading days)
-            const count = Math.min(filteredPrices.length, 60);
-            filteredPrices = filteredPrices.slice(-count);
-            filteredLabels = filteredLabels.slice(-count);
-        } else if (range === '6m') {
-            // Last 6 months (~120 trading days)
-            const count = Math.min(filteredPrices.length, 120);
-            filteredPrices = filteredPrices.slice(-count);
-            filteredLabels = filteredLabels.slice(-count);
-        } else if (range === '1y') {
-            // Last 1 year (~250 trading days)
-            const count = Math.min(filteredPrices.length, 250);
-            filteredPrices = filteredPrices.slice(-count);
-            filteredLabels = filteredLabels.slice(-count);
+        if (needsFetch) {
+            fetchStockData(currentSymbol);
+        } else {
+            // Otherwise, we can just slice the existing currentStockData on the client side instantly
+            if (!currentStockData || !currentStockData.prices || currentStockData.prices.length === 0) return;
+            const filteredData = filterChartDataByRange(currentStockData.labels, currentStockData.prices, currentChartRange);
+            const changeValue = currentPrice - previousClose;
+            updateChart(filteredData.labels, filteredData.prices, changeValue >= 0, currentStockData.currency);
         }
-        
-        // Update the Chart
-        const changeValue = currentPrice - previousClose;
-        updateChart(filteredLabels, filteredPrices, changeValue >= 0);
     });
 });
 
@@ -1194,6 +1206,7 @@ function enterDashboard(mode, name = '', username = '') {
     if (!appInitialized) {
         appInitialized = true;
         initChart();
+        currentChartRange = '2y'; // Set default 2y range on initial load
         fetchStockData(currentSymbol, false, true);
         loadTop10();
         

@@ -27,11 +27,14 @@ exports.handler = async function(event, context) {
             let symbol = event.queryStringParameters.symbol || 'RELIANCE.NS';
             symbol = symbol.toUpperCase();
             
+            const range = event.queryStringParameters.range || '2y';
+            const interval = event.queryStringParameters.interval || '1d';
+            
             // Check if US stock
             const isIndian = symbol.includes('.NS') || symbol.includes('.BO');
             const exchangeRate = 1;
             
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=2m&range=1d`;
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}`;
             const data = await fetchJson(url);
             const result = data.chart.result[0];
             
@@ -40,12 +43,17 @@ exports.handler = async function(event, context) {
             const prices = [];
             const labels = [];
             
+            const isIntraday = interval.endsWith('m') || interval.endsWith('h') || range === '1d';
             for (let i = 0; i < timestamps.length; i++) {
                 if (quote.close && quote.close[i] !== null && quote.close[i] !== undefined) {
                     const priceInNative = quote.close[i];
                     prices.push(priceInNative);
                     const date = new Date(timestamps[i] * 1000);
-                    labels.push(date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
+                    if (isIntraday) {
+                        labels.push(date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }));
+                    } else {
+                        labels.push(date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }));
+                    }
                 }
             }
             

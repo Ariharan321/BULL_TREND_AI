@@ -132,7 +132,10 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 is_indian = '.NS' in symbol or '.BO' in symbol
                 exchange_rate = 1.0
                 
-                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?interval=1d&range=2y"
+                range_param = query_params.get('range', ['2y'])[0]
+                interval_param = query_params.get('interval', ['1d'])[0]
+                
+                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?interval={interval_param}&range={range_param}"
                 data = fetch_json(url)
                 result = data['chart']['result'][0]
                 
@@ -141,12 +144,16 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 prices = []
                 labels = []
                 
+                is_intraday = interval_param.endswith('m') or interval_param.endswith('h') or range_param == '1d'
                 for i in range(len(timestamps)):
                     if quote.get('close') and i < len(quote['close']) and quote['close'][i] is not None:
                         price_in_native = quote['close'][i]
                         prices.append(price_in_native)
                         dt = datetime.datetime.fromtimestamp(timestamps[i])
-                        labels.append(dt.strftime('%d %b %Y'))
+                        if is_intraday:
+                            labels.append(dt.strftime('%H:%M'))
+                        else:
+                            labels.append(dt.strftime('%d %b %Y'))
                         
                 if not prices:
                     raise Exception('Empty data')
