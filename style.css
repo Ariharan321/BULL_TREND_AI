@@ -1899,7 +1899,7 @@ body {
 .ticker-marquee {
     display: flex;
     white-space: nowrap;
-    animation: marquee 90s linear infinite;
+    animation: marquee 60s linear infinite;
 }
 
 .ticker-marquee:hover {
@@ -1939,8 +1939,8 @@ body {
 .ticker-change.negative { color: var(--danger); }
 
 @keyframes marquee {
-    0%   { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-33.333%); }
 }
 
 /* User Profile Dropdown */

@@ -2108,6 +2108,7 @@ function updateTradeUI() {
                 const pnlPct = pos.avgPrice > 0 ? (pnl / (pos.shares * pos.avgPrice) * 100) : 0.0;
                 
                 const tr = document.createElement('tr');
+                const pnlArrow = pnl >= 0 ? '▲' : '▼';
                 tr.innerHTML = `
                     <td><strong>${sym}</strong></td>
                     <td>${pos.shares}</td>
@@ -2436,42 +2437,105 @@ if (alertHistorySearch) {
 }
 
 // 3. Marquee Ticker Logic
+const MARQUEE_FALLBACK_DATA = [
+    { symbol: '^NSEI', name: 'NIFTY 50', price: 24300.50, change: 120.30, percent_change: 0.50, currency: 'INR' },
+    { symbol: '^BSESN', name: 'SENSEX', price: 79800.20, change: -350.40, percent_change: -0.44, currency: 'INR' },
+    { symbol: '^IXIC', name: 'NASDAQ', price: 17850.80, change: 85.20, percent_change: 0.48, currency: 'USD' },
+    { symbol: '^GSPC', name: 'S&P 500', price: 5560.10, change: 12.40, percent_change: 0.22, currency: 'USD' },
+    { symbol: '^DJI', name: 'DOW JONES', price: 40130.60, change: -95.80, percent_change: -0.24, currency: 'USD' },
+    { symbol: 'RELIANCE.NS', name: 'RELIANCE', price: 2950.40, change: 15.20, percent_change: 0.52, currency: 'INR' },
+    { symbol: 'TCS.NS', name: 'TCS', price: 3910.15, change: -42.30, percent_change: -1.07, currency: 'INR' },
+    { symbol: 'HDFCBANK.NS', name: 'HDFCBANK', price: 1610.80, change: 8.90, percent_change: 0.56, currency: 'INR' },
+    { symbol: 'AAPL', name: 'APPLE', price: 224.30, change: 3.15, percent_change: 1.42, currency: 'USD' },
+    { symbol: 'MSFT', name: 'MICROSOFT', price: 420.55, change: -2.40, percent_change: -0.57, currency: 'USD' },
+    { symbol: 'NVDA', name: 'NVIDIA', price: 118.25, change: 4.80, percent_change: 4.23, currency: 'USD' },
+    { symbol: 'GOOG', name: 'ALPHABET', price: 175.40, change: -0.90, percent_change: -0.51, currency: 'USD' }
+];
+
+let marqueeData = [];
+let marqueeSimInterval = null;
+
+function renderMarqueeHTML() {
+    const marqueeContainer = document.getElementById('stock-ticker-marquee');
+    if (!marqueeContainer || !marqueeData || marqueeData.length === 0) return;
+    
+    const itemsHTML = marqueeData.map(item => {
+        const isPositive = item.change >= 0;
+        const changeClass = isPositive ? 'positive' : 'negative';
+        const arrow = isPositive ? '▲' : '▼';
+        return `
+            <div class="ticker-item">
+                <span class="ticker-symbol">${item.symbol.replace('.NS', '')}</span>
+                <span class="ticker-price">${item.currency === 'INR' ? '₹' : '$'}${item.price.toFixed(2)}</span>
+                <span class="ticker-change ${changeClass}">${arrow} ${Math.abs(item.change).toFixed(2)} (${arrow} ${Math.abs(item.percent_change).toFixed(2)}%)</span>
+            </div>
+        `;
+    }).join('');
+    
+    // Duplicate the items twice to ensure seamless scrolling loop
+    marqueeContainer.innerHTML = itemsHTML + itemsHTML + itemsHTML;
+}
+
+function simulateMarqueeTicks() {
+    if (!marqueeData || marqueeData.length === 0) return;
+    
+    // Randomly select 1-3 items to fluctuate slightly
+    const numToUpdate = Math.floor(Math.random() * 3) + 1;
+    for (let i = 0; i < numToUpdate; i++) {
+        const idx = Math.floor(Math.random() * marqueeData.length);
+        const item = marqueeData[idx];
+        
+        // Small fluctuation between -0.15% and +0.15%
+        const percentChange = (Math.random() * 0.3 - 0.15) / 100;
+        const priceTick = item.price * percentChange;
+        
+        item.price += priceTick;
+        item.change += priceTick;
+        item.percent_change = (item.change / (item.price - item.change)) * 100;
+    }
+    
+    renderMarqueeHTML();
+}
+
 async function initMarquee() {
     const marqueeContainer = document.getElementById('stock-ticker-marquee');
     if (!marqueeContainer) return;
     
     try {
-        const response = await fetch('/api/top10?symbols=^NSEI,^BSESN,^IXIC,^GSPC,^DJI,RELIANCE.NS,TCS.NS,HDFCBANK.NS,AAPL,MSFT,NVDA,GOOG&raw=1');
+        const response = await fetch('/.netlify/functions/stock?action=top10&symbols=^NSEI,^BSESN,^IXIC,^GSPC,^DJI,RELIANCE.NS,TCS.NS,HDFCBANK.NS,AAPL,MSFT,NVDA,GOOG');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         
-        marqueeContainer.innerHTML = '';
-        
         if (data && data.length > 0) {
-            // Create ticker items
-            const itemsHTML = data.map(item => {
-                const isPositive = item.change >= 0;
-                const changeClass = isPositive ? 'positive' : 'negative';
-                const prefix = isPositive ? '+' : '';
-                return `
-                    <div class="ticker-item">
-                        <span class="ticker-symbol">${item.symbol.replace('.NS', '')}</span>
-                        <span class="ticker-price">${item.currency === 'INR' ? '₹' : '$'}${item.price.toFixed(2)}</span>
-                        <span class="ticker-change ${changeClass}">${prefix}${item.change.toFixed(2)} (${prefix}${item.percent_change.toFixed(2)}%)</span>
-                    </div>
-                `;
-            }).join('');
-            
-            // Duplicate the items twice to ensure seamless scrolling loop
-            marqueeContainer.innerHTML = itemsHTML + itemsHTML + itemsHTML;
+            marqueeData = data.map(item => ({
+                symbol: item.symbol,
+                name: item.shortName || item.symbol,
+                price: parseFloat(item.price),
+                change: parseFloat(item.change),
+                percent_change: parseFloat(item.percent_change),
+                currency: item.currency || (item.symbol.endsWith('.NS') ? 'INR' : 'USD')
+            }));
         } else {
-            marqueeContainer.innerHTML = '<span style="color: var(--text-muted); padding: 0 20px;">Market data unavailable</span>';
+            throw new Error('Empty data');
+        }
+        
+        renderMarqueeHTML();
+        if (!marqueeSimInterval) {
+            marqueeSimInterval = setInterval(simulateMarqueeTicks, 5000);
         }
     } catch (e) {
         console.error("Failed to load marquee data:", e);
-        marqueeContainer.innerHTML = '<span style="color: var(--text-muted); padding: 0 20px;">Live market data offline</span>';
+        // Fallback to simulated data if marqueeData is empty
+        if (!marqueeData || marqueeData.length === 0) {
+            marqueeData = JSON.parse(JSON.stringify(MARQUEE_FALLBACK_DATA));
+        }
+        renderMarqueeHTML();
+        if (!marqueeSimInterval) {
+            marqueeSimInterval = setInterval(simulateMarqueeTicks, 5000);
+        }
     }
 }
+
 
 // Call on startup
 document.addEventListener('DOMContentLoaded', () => {
