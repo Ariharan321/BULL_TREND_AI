@@ -579,10 +579,12 @@ body {
     height: 100vh;
     background: url('login-bg.jpg') no-repeat center center/cover;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 10000;
     transition: opacity 0.4s ease, visibility 0.4s ease;
+    overflow-y: auto;
 }
 
 #auth-overlay.hidden {
@@ -2006,6 +2008,7 @@ body {
 .dropdown-user-info {
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 .dropdown-user-info strong {
     color: var(--text-main);
@@ -2014,6 +2017,10 @@ body {
 .dropdown-user-info span {
     color: var(--text-muted);
     font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
 }
 
 .dropdown-list {
@@ -2289,3 +2296,74 @@ body {
     }
 }
 
+/* Portfolio Dashboard Styles */
+.btn-portfolio-action {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-portfolio-action:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--primary);
+}
+
+.btn-portfolio-action.btn-quick-sell-action:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: var(--danger);
+    color: #f87171 !important;
+}
+
+.portfolio-type-badge {
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.portfolio-type-badge.buy {
+    background: rgba(0, 230, 153, 0.12);
+    color: var(--success);
+}
+
+.portfolio-type-badge.sell {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger);
+}
+
+/* Auth Screen Grid and Header Updates */
+.auth-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    max-width: 1200px;
+    width: 100%;
+    padding: 80px 40px 40px;
+    box-sizing: border-box;
+    z-index: 10;
+}
+
+.auth-nav-link:hover {
+    color: #fff !important;
+}
+
+@media (max-width: 992px) {
+    .auth-features-panel {
+        display: none !important;
+    }
+    .auth-header .auth-nav-links {
+        display: none !important;
+    }
+    .auth-container {
+        padding: 40px 20px;
+    }
+}

@@ -77,6 +77,25 @@ function initChart() {
         console.error("Chart.js is not loaded.");
         return;
     }
+    
+    // Destroy existing chart on canvas to prevent reuse error
+    const existingChart = Chart.getChart("stockChart");
+    if (existingChart) {
+        try {
+            existingChart.destroy();
+        } catch(e) {
+            console.error("Error destroying chart instance by ID:", e);
+        }
+    }
+    if (stockChart) {
+        try {
+            stockChart.destroy();
+        } catch(e) {
+            console.error("Error destroying stockChart reference:", e);
+        }
+        stockChart = null;
+    }
+    
     const ctx = document.getElementById('stockChart').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
@@ -630,6 +649,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
         } else if (targetId === 'view-trade') {
             populateTradeForm();
             updateTradeUI();
+        } else if (targetId === 'view-portfolio') {
+            updatePortfolioUI();
         }
     });
 });
@@ -1275,6 +1296,7 @@ function handleSignup() {
     
     enterDashboard('logged_in', name, username);
 }
+
 
 function handleGuestMode() {
     sessionStorage.setItem('auth_mode', 'guest');
@@ -2470,6 +2492,36 @@ function initTradingSimulator() {
         recalcEstCost();
         saveTradingState();
     });
+
+    // Portfolio tab buttons integration
+    const portSyncBtn = document.getElementById('portfolio-refresh-btn');
+    if (portSyncBtn) {
+        portSyncBtn.addEventListener('click', async () => {
+            const originalHTML = portSyncBtn.innerHTML;
+            portSyncBtn.disabled = true;
+            portSyncBtn.innerHTML = `<span class="loader-small" style="width:14px; height:14px; border-width:2px; display:inline-block; vertical-align:middle; margin-right:6px;"></span> Syncing...`;
+            await updatePortfolioUI();
+            portSyncBtn.innerHTML = originalHTML;
+            portSyncBtn.disabled = false;
+            showToast('Portfolio prices updated.', 'success');
+        });
+    }
+
+    const clearHistoryBtn = document.getElementById('clear-trade-history-btn');
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset your simulated portfolio? This will liquidate all positions, clear all logs, and reset cash to ₹10,00,000.00.')) {
+                tradingState = {
+                    cash: 1000000.0,
+                    positions: {},
+                    history: []
+                };
+                saveTradingState();
+                updatePortfolioUI();
+                showToast('Portfolio reset successfully.', 'success');
+            }
+        });
+    }
 }
 
 function recalcEstCost() {
@@ -2483,6 +2535,394 @@ function recalcEstCost() {
     } else {
         estCostEl.textContent = formatINR(qty * currentPrice);
     }
+}
+
+// Portfolio helper functions and global chart instance
+let portfolioAllocationChartInstance = null;
+
+async function updatePortfolioUI() {
+    const portTotalValueEl = document.getElementById('port-total-value');
+    const portTotalChangeEl = document.getElementById('port-total-change');
+    const portAvailableCashEl = document.getElementById('port-available-cash');
+    const portInvestedCapitalEl = document.getElementById('port-invested-capital');
+    const portCapitalRatioEl = document.getElementById('port-capital-ratio');
+    const portHealthScoreEl = document.getElementById('port-health-score');
+    const portHealthDescEl = document.getElementById('port-health-desc');
+    const portPositionsCountEl = document.getElementById('port-positions-count');
+    const portPositionsListEl = document.getElementById('port-positions-list');
+    const portHistoryListEl = document.getElementById('port-history-list');
+    
+    if (!portTotalValueEl) return;
+    
+    portPositionsListEl.innerHTML = `
+        <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                <div class="loader-small" style="margin: 0 auto 12px auto;"></div>
+                <div>Fetching live portfolio valuations...</div>
+            </td>
+        </tr>
+    `;
+    
+    const cashVal = tradingState.cash;
+    portAvailableCashEl.textContent = formatINR(cashVal);
+    
+    const symbols = Object.keys(tradingState.positions).filter(sym => tradingState.positions[sym].shares > 0);
+    portPositionsCountEl.textContent = `${symbols.length} ${symbols.length === 1 ? 'Asset' : 'Assets'}`;
+    
+    let totalMarketValue = 0;
+    let totalInvestedCapital = 0;
+    let positionsData = [];
+    
+    if (symbols.length === 0) {
+        portPositionsListEl.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 12px;">💼</div>
+                    <div style="margin-bottom: 12px;">No assets in your portfolio yet.</div>
+                    <button class="btn-primary" style="font-size: 0.85rem; padding: 8px 16px; border-radius: 8px;" onclick="document.querySelector('[data-target=\'view-trade\']').click();">Start Trading</button>
+                </td>
+            </tr>
+        `;
+        
+        const netWorth = cashVal;
+        portTotalValueEl.textContent = formatINR(netWorth);
+        portTotalChangeEl.textContent = `₹0.00 (0.00%)`;
+        portTotalChangeEl.className = 'positive';
+        portTotalChangeEl.style.color = 'var(--success)';
+        
+        portInvestedCapitalEl.textContent = formatINR(0);
+        portCapitalRatioEl.textContent = `0.0% asset allocation`;
+        
+        portHealthScoreEl.textContent = `Cash Heavy`;
+        portHealthDescEl.textContent = `100% in liquid cash. No active holdings.`;
+        
+        drawAllocationChart([100], ['Available Cash'], ['#1e293b']);
+    } else {
+        try {
+            const symbolsParam = symbols.join(',');
+            const res = await fetch(`/.netlify/functions/stock?action=top10&symbols=${encodeURIComponent(symbolsParam)}`);
+            const data = await res.json();
+            
+            const priceMap = {};
+            data.forEach(item => {
+                priceMap[item.symbol.toUpperCase()] = {
+                    price: item.price,
+                    currency: item.currency,
+                    shortName: item.shortName || item.symbol
+                };
+            });
+            
+            portPositionsListEl.innerHTML = '';
+            
+            symbols.forEach(sym => {
+                const pos = tradingState.positions[sym];
+                const cleanSym = sym.toUpperCase();
+                
+                let livePrice = pos.avgPrice;
+                let currency = 'INR';
+                let shortName = sym;
+                
+                if (priceMap[cleanSym]) {
+                    livePrice = priceMap[cleanSym].price;
+                    currency = priceMap[cleanSym].currency;
+                    shortName = priceMap[cleanSym].shortName;
+                } else {
+                    const activeSym = currentSymbol ? currentSymbol.replace('.NS', '').replace('.BO', '').toUpperCase() : '';
+                    if (activeSym === cleanSym) {
+                        livePrice = currentPrice;
+                    }
+                }
+                
+                const marketVal = pos.shares * livePrice;
+                const costBasis = pos.shares * pos.avgPrice;
+                
+                totalMarketValue += marketVal;
+                totalInvestedCapital += costBasis;
+                
+                const pnl = marketVal - costBasis;
+                const pnlPct = costBasis > 0 ? (pnl / costBasis * 100) : 0.0;
+                
+                positionsData.push({
+                    symbol: sym,
+                    shortName: shortName,
+                    shares: pos.shares,
+                    avgPrice: pos.avgPrice,
+                    livePrice: livePrice,
+                    marketVal: marketVal,
+                    pnl: pnl,
+                    pnlPct: pnlPct,
+                    currency: currency
+                });
+            });
+            
+            positionsData.forEach(pos => {
+                const tr = document.createElement('tr');
+                const isPositive = pos.pnl >= 0;
+                const sign = isPositive ? '+' : '';
+                
+                tr.innerHTML = `
+                    <td style="padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">
+                        <div style="display:flex; flex-direction:column;">
+                            <strong style="color: #fff;">${pos.symbol}</strong>
+                            <span style="font-size:0.75rem; color: var(--text-muted); text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:140px;" title="${pos.shortName}">${pos.shortName}</span>
+                        </div>
+                    </td>
+                    <td style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border); font-weight: 500;">${pos.shares}</td>
+                    <td style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border); font-family: monospace;">${formatStockCurrency(pos.avgPrice, pos.currency)}</td>
+                    <td style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border); font-family: monospace; font-weight: 500;">${formatStockCurrency(pos.livePrice, pos.currency)}</td>
+                    <td style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border); font-family: monospace; font-weight: 600; color: #fff;">${formatStockCurrency(pos.marketVal, pos.currency)}</td>
+                    <td style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border); font-family: monospace; font-weight: 600; color: ${isPositive ? 'var(--success)' : 'var(--danger)'}">
+                        ${sign}${formatStockCurrency(pos.pnl, pos.currency)}<br>
+                        <span style="font-size: 0.75rem; font-weight: 500;">(${sign}${pos.pnlPct.toFixed(2)}%)</span>
+                    </td>
+                    <td style="text-align: center; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">
+                        <div style="display:flex; justify-content:center; gap:6px;">
+                            <button class="btn-portfolio-action btn-trade-action" data-symbol="${pos.symbol}">Trade</button>
+                            <button class="btn-portfolio-action btn-quick-sell-action" data-symbol="${pos.symbol}" data-price="${pos.livePrice}">Quick Sell</button>
+                        </div>
+                    </td>
+                `;
+                
+                tr.querySelector('.btn-trade-action').addEventListener('click', (e) => {
+                    const symToTrade = e.currentTarget.getAttribute('data-symbol');
+                    currentSymbol = symToTrade;
+                    fetchStockData(currentSymbol);
+                    
+                    const tradeTab = document.querySelector('[data-target="view-trade"]');
+                    if (tradeTab) tradeTab.click();
+                });
+                
+                tr.querySelector('.btn-quick-sell-action').addEventListener('click', (e) => {
+                    const symToSell = e.currentTarget.getAttribute('data-symbol');
+                    const sellPrice = parseFloat(e.currentTarget.getAttribute('data-price'));
+                    quickSellPosition(symToSell, sellPrice);
+                });
+                
+                portPositionsListEl.appendChild(tr);
+            });
+            
+            const netWorth = cashVal + totalMarketValue;
+            portTotalValueEl.textContent = formatINR(netWorth);
+            
+            const initialCapital = 1000000.0;
+            const totalPnl = netWorth - initialCapital;
+            const totalPnlPct = (totalPnl / initialCapital) * 100;
+            
+            const isOverallPositive = totalPnl >= 0;
+            portTotalChangeEl.textContent = `${isOverallPositive ? '+' : ''}${formatINR(totalPnl)} (${isOverallPositive ? '+' : ''}${totalPnlPct.toFixed(2)}%)`;
+            portTotalChangeEl.className = isOverallPositive ? 'positive' : 'negative';
+            portTotalChangeEl.style.color = isOverallPositive ? 'var(--success)' : 'var(--danger)';
+            
+            portInvestedCapitalEl.textContent = formatINR(totalInvestedCapital);
+            const allocationRatio = (totalMarketValue / netWorth) * 100;
+            portCapitalRatioEl.textContent = `${allocationRatio.toFixed(1)}% asset allocation`;
+            
+            let healthScore = "Unbalanced";
+            let healthDesc = "";
+            if (allocationRatio < 15) {
+                healthScore = "Cash Heavy";
+                healthDesc = "More than 85% of portfolio is in cash. Consider investing in quality assets.";
+            } else if (symbols.length === 1) {
+                healthScore = "Concentrated";
+                healthDesc = "All holdings are in a single asset. High exposure to risk. Consider diversifying.";
+            } else if (symbols.length <= 3) {
+                healthScore = "Moderate";
+                healthDesc = "Portfolio has a few holdings. Diversification is moderate.";
+            } else {
+                healthScore = "Well Diversified";
+                healthDesc = "Assets are spread across multiple holdings. Risk exposure is balanced.";
+            }
+            
+            portHealthScoreEl.textContent = healthScore;
+            portHealthDescEl.textContent = healthDesc;
+            
+            const chartLabels = [];
+            const chartData = [];
+            const chartColors = [];
+            const colorPalette = [
+                '#3b82f6', // electric blue
+                '#8b5cf6', // violet
+                '#f59e0b', // gold/champagne
+                '#ec4899', // pink
+                '#f97316', // orange
+                '#06b6d4', // cyan
+                '#10b981'  // mint green
+            ];
+            
+            positionsData.forEach((pos, index) => {
+                chartLabels.push(pos.symbol.replace('.NS', '').replace('.BO', ''));
+                chartData.push(pos.marketVal);
+                chartColors.push(colorPalette[index % colorPalette.length]);
+            });
+            
+            chartLabels.push('Cash');
+            chartData.push(cashVal);
+            chartColors.push('#1e293b');
+            
+            drawAllocationChart(chartData, chartLabels, chartColors);
+            
+        } catch (e) {
+            console.error("Failed to load portfolio live prices:", e);
+            portPositionsListEl.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--danger); padding: 40px 20px;">
+                        Failed to fetch live prices from Yahoo Finance API. Please verify your connection and click "Sync Prices" to retry.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    portHistoryListEl.innerHTML = '';
+    if (tradingState.history.length === 0) {
+        portHistoryListEl.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No transactions recorded.</td>
+            </tr>
+        `;
+    } else {
+        const fullHistory = [...tradingState.history].reverse();
+        fullHistory.forEach(tx => {
+            const tr = document.createElement('tr');
+            const totalAmt = tx.shares * tx.price;
+            
+            tr.innerHTML = `
+                <td style="padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">
+                    <span class="portfolio-type-badge ${tx.type}">${tx.type}</span>
+                </td>
+                <td style="padding: 12px 8px; border-bottom: 1px solid var(--panel-border);"><strong>${tx.symbol}</strong></td>
+                <td style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border); font-family: monospace;">${tx.shares}</td>
+                <td style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border); font-family: monospace;">${formatINR(tx.price)}</td>
+                <td style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border); font-family: monospace; font-weight: 500; color: #fff;">${formatINR(totalAmt)}</td>
+                <td style="padding: 12px 8px; border-bottom: 1px solid var(--panel-border); color: var(--text-muted); font-size: 0.8rem;">${tx.time}</td>
+            `;
+            portHistoryListEl.appendChild(tr);
+        });
+    }
+}
+
+function drawAllocationChart(data, labels, colors) {
+    const ctx = document.getElementById('portfolioAllocationChart');
+    const emptyState = document.getElementById('allocation-empty-state');
+    const legendEl = document.getElementById('allocation-legend');
+    
+    if (!ctx) return;
+    
+    const existingChart = Chart.getChart("portfolioAllocationChart");
+    if (existingChart) {
+        try {
+            existingChart.destroy();
+        } catch(e) {
+            console.error("Error destroying allocation chart by ID:", e);
+        }
+    }
+    if (portfolioAllocationChartInstance) {
+        portfolioAllocationChartInstance.destroy();
+        portfolioAllocationChartInstance = null;
+    }
+    
+    const allZero = data.every(v => v === 0);
+    if (allZero) {
+        emptyState.classList.remove('hidden');
+        ctx.style.display = 'none';
+        legendEl.innerHTML = '';
+        return;
+    }
+    
+    emptyState.classList.add('hidden');
+    ctx.style.display = 'block';
+    
+    portfolioAllocationChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: '#11111a',
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const val = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = total > 0 ? (val / total * 100).toFixed(1) : 0;
+                            return ` ${label}: ${formatINR(val)} (${pct}%)`;
+                        }
+                    },
+                    backgroundColor: '#11111a',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255, 255, 255, 0.08)',
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 8,
+                    displayColors: true
+                }
+            },
+            cutout: '75%'
+        }
+    });
+    
+    legendEl.innerHTML = '';
+    labels.forEach((label, idx) => {
+        const val = data[idx];
+        const total = data.reduce((a, b) => a + b, 0);
+        const pct = total > 0 ? (val / total * 100).toFixed(1) : 0;
+        
+        const legendItem = document.createElement('div');
+        legendItem.style.display = 'flex';
+        legendItem.style.alignItems = 'center';
+        legendItem.style.gap = '6px';
+        legendItem.style.background = 'rgba(255, 255, 255, 0.03)';
+        legendItem.style.border = '1px solid rgba(255, 255, 255, 0.05)';
+        legendItem.style.padding = '4px 8px';
+        legendItem.style.borderRadius = '6px';
+        legendItem.style.color = 'var(--text-muted)';
+        
+        legendItem.innerHTML = `
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${colors[idx]}; display: inline-block;"></span>
+            <span><strong>${label}</strong>: ${pct}%</span>
+        `;
+        legendEl.appendChild(legendItem);
+    });
+}
+
+function quickSellPosition(symbol, livePrice) {
+    const pos = tradingState.positions[symbol];
+    if (!pos || pos.shares <= 0) {
+        showToast(`No open shares to sell for ${symbol}.`, 'error');
+        return;
+    }
+    
+    const sharesToSell = pos.shares;
+    const cost = sharesToSell * livePrice;
+    
+    tradingState.cash += cost;
+    delete tradingState.positions[symbol];
+    
+    tradingState.history.push({
+        type: 'sell',
+        symbol: symbol,
+        shares: sharesToSell,
+        price: livePrice,
+        time: new Date().toLocaleTimeString('en-IN') + ' ' + new Date().toLocaleDateString('en-IN')
+    });
+    
+    saveTradingState();
+    showToast(`Quick sold ${sharesToSell} shares of ${symbol} for ${formatINR(cost)}!`, 'success');
+    updatePortfolioUI();
 }
 
 // Populate the trade order form with the active stock info

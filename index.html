@@ -33,6 +33,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                     Dashboard
                 </a>
+                <a href="#" class="nav-item" data-target="view-portfolio">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    Portfolio
+                </a>
                 <a href="#" class="nav-item" data-target="view-alerts">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                     Alerts
@@ -84,7 +88,7 @@
                 </div>
                 <div id="header-user-profile" class="user-profile hidden" style="position: relative;">
                     <button id="profile-dropdown-btn" class="profile-toggle-btn" aria-haspopup="true" aria-expanded="false" style="border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px 4px 6px; gap: 8px;">
-                        <div id="header-profile-avatar-container" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden;">
+                        <div id="header-profile-avatar-container" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden; flex-shrink: 0;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </div>
                         <span id="user-display-name" class="username-tag" style="font-weight: 700; color: #fff;">Guest</span>
@@ -93,7 +97,7 @@
                     <!-- Dropdown Menu -->
                     <div id="profile-dropdown-menu" class="dropdown-menu glass-panel hidden" style="width: 260px;">
                         <div class="dropdown-header" style="gap: 16px;">
-                            <div id="dropdown-profile-avatar-container" style="width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden;">
+                            <div id="dropdown-profile-avatar-container" style="width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden; flex-shrink: 0;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             </div>
                             <div class="dropdown-user-info">
@@ -211,6 +215,125 @@
                 </div>
                 <div class="data-attribution">
                     Powered by Yahoo Finance API
+                </div>
+            </div>
+
+            <!-- Portfolio View -->
+            <div id="view-portfolio" class="view-section">
+                <!-- Header with greeting, subtitle, and dynamic quick actions -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 2rem; margin-bottom: 4px;">My Portfolio Dashboard</h2>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">Live valuation, holdings breakdown, and metrics.</p>
+                    </div>
+                    <div>
+                        <button id="portfolio-refresh-btn" class="btn-primary" style="padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; gap: 8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                            Sync Prices
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Metrics Cards Grid -->
+                <div class="portfolio-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 24px;">
+                    <div class="card glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Net Worth (Live)</span>
+                        <h2 id="port-total-value" style="font-size: 1.85rem; font-weight: 700; margin: 12px 0 6px 0; color: #fff;">₹10,00,000.00</h2>
+                        <span id="port-total-change" class="positive" style="font-size: 0.9rem; font-weight: 600;">+₹0.00 (0.00%)</span>
+                    </div>
+                    <div class="card glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Available Cash</span>
+                        <h2 id="port-available-cash" style="font-size: 1.85rem; font-weight: 700; margin: 12px 0 6px 0; color: #fff;">₹10,00,000.00</h2>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Ready to deploy</span>
+                    </div>
+                    <div class="card glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Invested Capital</span>
+                        <h2 id="port-invested-capital" style="font-size: 1.85rem; font-weight: 700; margin: 12px 0 6px 0; color: #fff;">₹0.00</h2>
+                        <span id="port-capital-ratio" style="font-size: 0.85rem; color: var(--text-muted);">0.0% allocation</span>
+                    </div>
+                    <div class="card glass-panel" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;">
+                        <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Portfolio Health</span>
+                        <h2 id="port-health-score" style="font-size: 1.85rem; font-weight: 700; margin: 12px 0 6px 0; color: #fff;">Cash Heavy</h2>
+                        <span id="port-health-desc" style="font-size: 0.85rem; color: var(--text-muted);">100% in liquid cash</span>
+                    </div>
+                </div>
+
+                <!-- Main Content Row -->
+                <div style="display: grid; grid-template-columns: 1.7fr 1fr; gap: 24px; align-items: start; margin-bottom: 24px;">
+                    
+                    <!-- Open Positions Card -->
+                    <div class="card glass-panel" style="display: flex; flex-direction: column; height: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 style="font-family: 'Space Grotesk', sans-serif;">Open Positions</h3>
+                            <span id="port-positions-count" style="font-size: 0.85rem; background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-weight: 600;">0 Assets</span>
+                        </div>
+                        <div style="overflow-x: auto; flex: 1;">
+                            <table class="trade-table" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Asset</th>
+                                        <th style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Qty</th>
+                                        <th style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Avg Cost</th>
+                                        <th style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Live Price</th>
+                                        <th style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Value</th>
+                                        <th style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">P&L</th>
+                                        <th style="text-align: center; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="port-positions-list">
+                                    <!-- Positions will be dynamically generated -->
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                                            <div style="font-size: 2.5rem; margin-bottom: 12px;">💼</div>
+                                            <div>No assets in your portfolio yet.</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Asset Allocation Chart Card -->
+                    <div class="card glass-panel" style="display: flex; flex-direction: column; min-height: 380px; align-items: stretch;">
+                        <h3 style="font-family: 'Space Grotesk', sans-serif; margin-bottom: 20px;">Asset Allocation</h3>
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; position: relative; min-height: 220px;">
+                            <canvas id="portfolioAllocationChart" style="max-height: 220px; max-width: 220px;"></canvas>
+                            <div id="allocation-empty-state" style="text-align: center; color: var(--text-muted); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%;">
+                                No assets to chart. Buy stocks to view diversification.
+                            </div>
+                        </div>
+                        <div id="allocation-legend" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; justify-content: center; font-size: 0.8rem;">
+                            <!-- Legend items injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Transaction Log -->
+                <div class="card glass-panel" style="margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="font-family: 'Space Grotesk', sans-serif;">Full Transaction Ledger</h3>
+                        <button id="clear-trade-history-btn" class="btn-auth-box text-danger" style="background: transparent; border: 1.5px solid rgba(239, 68, 68, 0.2); font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 10px; color: var(--danger);">Reset Portfolio</button>
+                    </div>
+                    <div style="overflow-x: auto; max-height: 260px; overflow-y: auto;">
+                        <table class="trade-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Type</th>
+                                    <th style="text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Ticker</th>
+                                    <th style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Shares</th>
+                                    <th style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Price</th>
+                                    <th style="text-align: right; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Total Amount</th>
+                                    <th style="text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--panel-border);">Date & Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="port-history-list">
+                                <!-- History rows dynamically generated -->
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No transactions recorded.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -647,64 +770,125 @@
 
     <!-- Authentication Overlay -->
     <div id="auth-overlay">
-        <div class="auth-card">
-            <!-- Back Button -->
-            <button id="auth-back-btn" class="auth-back-btn hidden" title="Back">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </button>
-
-            <!-- Brand Logo -->
-            <div class="auth-logo">
-                <img src="logo.png" alt="Bull Trend AI Logo">
+        <!-- Auth Header Navbar -->
+        <div class="auth-header" style="position: absolute; top: 0; left: 0; width: 100%; height: 75px; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; box-sizing: border-box; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.06); z-index: 10001;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="logo.png" alt="Logo" style="height: 32px; width: 32px; border-radius: 4px;">
+                <span style="font-size: 1.25rem; font-weight: 700; color: #fff; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.5px;">Bull Trend <span style="color: var(--primary);">AI</span></span>
             </div>
-            <h2>Bull Trend <span class="highlight">AI</span></h2>
-            <p class="auth-subtitle" id="auth-card-subtitle">Elevate Your Trading with Real-time Insights & AI Predictions</p>
+            <div class="auth-nav-links" style="display: flex; gap: 28px;">
+                <a href="#" class="auth-nav-link" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s ease;">SaaS Platform</a>
+                <a href="#" class="auth-nav-link" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s ease;">AI Projections</a>
+                <a href="#" class="auth-nav-link" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s ease;">Alert Engine</a>
+                <a href="#" class="auth-nav-link" style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s ease;">FAQ</a>
+            </div>
+            <div>
+                <button class="auth-btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="document.getElementById('select-guest-link').click()">Explore Guest</button>
+            </div>
+        </div>
 
-            <!-- 1. Selection Screen -->
-            <div id="auth-selection-screen" class="auth-screen">
-                <div class="auth-btn-group">
-                    <button id="select-login-btn" class="auth-btn-primary">Log In</button>
-                    <button id="select-signup-btn" class="auth-btn-secondary">Sign Up</button>
+        <!-- Auth Body Container -->
+        <div class="auth-container">
+            <!-- Left Side: Features Panel (Transparent backdrop, directly on background) -->
+            <div class="auth-features-panel glass-panel" style="flex: 1.2; color: #fff; max-width: 580px; padding: 40px; border-radius: 24px; background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(16px); box-sizing: border-box; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+                <h1 style="font-size: 2.8rem; font-weight: 800; font-family: 'Space Grotesk', sans-serif; line-height: 1.2; margin-bottom: 16px; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Predict Trends.<br>Trade Smarter.</h1>
+                <p style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 36px;">Experience the next generation of technical analysis with real-time Indian stock market price projection engine, live alerts, and simulated paper trading.</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Card 1 -->
+                    <div class="glass-panel" style="padding: 16px; border-radius: 12px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #60a5fa;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                            <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Live Market Quotes</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin: 0;">Monitor real-time quote feeds dynamically via local proxy API feeds.</p>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="glass-panel" style="padding: 16px; border-radius: 12px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="color: var(--success); display: flex; align-items: center; gap: 8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #34d399;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                            <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">AI Projections</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin: 0;">Predict SMA crossovers, RSI momentum, and 7/30/90-day regression trends.</p>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="glass-panel" style="padding: 16px; border-radius: 12px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="color: var(--warning); display: flex; align-items: center; gap: 8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #fbbf24;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Threshold Alerts</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin: 0;">Get instantly notified via visual toasts and mock emails when prices cross alert marks.</p>
+                    </div>
+                    <!-- Card 4 -->
+                    <div class="glass-panel" style="padding: 16px; border-radius: 12px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="color: #c084fc; display: flex; align-items: center; gap: 8px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #c084fc;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+                            <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Paper Portfolio</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin: 0;">Trade virtual assets with live profit/loss calculations and allocation charts.</p>
+                    </div>
                 </div>
-                <a id="select-guest-link" class="auth-guest-link">Continue as Guest</a>
             </div>
 
-            <!-- 2. Login Screen -->
-            <div id="auth-login-screen" class="auth-screen hidden">
-                <div class="auth-input-group">
-                    <label for="login-username">Username or Email</label>
-                    <input type="text" id="login-username" class="auth-input" placeholder="Enter your username">
-                </div>
-                <div class="auth-input-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" class="auth-input" placeholder="••••••••">
-                </div>
-                <button id="submit-login-btn" class="auth-btn-primary">Log In</button>
-                <p class="auth-footer-text">Don't have an account? <span id="switch-to-signup">Sign Up</span></p>
-                <a class="auth-guest-link auth-guest-alt">Continue as Guest</a>
-            </div>
+            <div class="auth-card">
+                <!-- Back Button -->
+                <button id="auth-back-btn" class="auth-back-btn hidden" title="Back">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
 
-            <!-- 3. Sign Up Screen -->
-            <div id="auth-signup-screen" class="auth-screen hidden">
-                <div class="auth-input-group">
-                    <label for="signup-name">Full Name</label>
-                    <input type="text" id="signup-name" class="auth-input" placeholder="e.g. John Doe">
+                <!-- Brand Logo -->
+                <div class="auth-logo">
+                    <img src="logo.png" alt="Bull Trend AI Logo">
                 </div>
-                <div class="auth-input-group">
-                    <label for="signup-username">Username or Email</label>
-                    <input type="text" id="signup-username" class="auth-input" placeholder="Enter your username">
+                <h2>Bull Trend <span class="highlight">AI</span></h2>
+                <p class="auth-subtitle" id="auth-card-subtitle">Elevate Your Trading with Real-time Insights & AI Predictions</p>
+
+                <!-- 1. Selection Screen -->
+                <div id="auth-selection-screen" class="auth-screen">
+                    <div class="auth-btn-group">
+                        <button id="select-login-btn" class="auth-btn-primary">Log In</button>
+                        <button id="select-signup-btn" class="auth-btn-secondary">Sign Up</button>
+                    </div>
+                    <a id="select-guest-link" class="auth-guest-link">Continue as Guest</a>
                 </div>
-                <div class="auth-input-group">
-                    <label for="signup-password">Password</label>
-                    <input type="password" id="signup-password" class="auth-input" placeholder="Create a password">
+
+                <!-- 2. Login Screen -->
+                <div id="auth-login-screen" class="auth-screen hidden">
+                    <div class="auth-input-group">
+                        <label for="login-username">Username or Email</label>
+                        <input type="text" id="login-username" class="auth-input" placeholder="Enter your username">
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="auth-input" placeholder="••••••••">
+                    </div>
+                    <button id="submit-login-btn" class="auth-btn-primary">Log In</button>
+                    <p class="auth-footer-text">Don't have an account? <span id="switch-to-signup">Sign Up</span></p>
+                    <a class="auth-guest-link auth-guest-alt">Continue as Guest</a>
                 </div>
-                <div class="auth-input-group">
-                    <label for="signup-confirm-password">Confirm Password</label>
-                    <input type="password" id="signup-confirm-password" class="auth-input" placeholder="Confirm your password">
+
+                <!-- 3. Sign Up Screen -->
+                <div id="auth-signup-screen" class="auth-screen hidden">
+                    <div class="auth-input-group">
+                        <label for="signup-name">Full Name</label>
+                        <input type="text" id="signup-name" class="auth-input" placeholder="e.g. John Doe">
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="signup-username">Username or Email</label>
+                        <input type="text" id="signup-username" class="auth-input" placeholder="Enter your username">
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" class="auth-input" placeholder="Create a password">
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <input type="password" id="signup-confirm-password" class="auth-input" placeholder="Confirm your password">
+                    </div>
+                    <button id="submit-signup-btn" class="auth-btn-primary">Create Account</button>
+                    <p class="auth-footer-text">Already have an account? <span id="switch-to-login">Log In</span></p>
+                    <a class="auth-guest-link auth-guest-alt">Continue as Guest</a>
                 </div>
-                <button id="submit-signup-btn" class="auth-btn-primary">Create Account</button>
-                <p class="auth-footer-text">Already have an account? <span id="switch-to-login">Log In</span></p>
-                <a class="auth-guest-link auth-guest-alt">Continue as Guest</a>
             </div>
         </div>
     </div>
@@ -863,7 +1047,7 @@
                     <div id="tab-view-profile" class="profile-tab-content">
                         <h2 style="font-size: 1.5rem; margin-bottom: 24px; font-family: 'Space Grotesk', sans-serif;">User Profile</h2>
                         <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 28px;">
-                            <div id="profile-view-avatar" style="width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden;">
+                            <div id="profile-view-avatar" style="width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden; flex-shrink: 0;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             </div>
                             <div>
@@ -902,7 +1086,7 @@
                     <div id="tab-change-pic" class="profile-tab-content hidden">
                         <h2 style="font-size: 1.5rem; margin-bottom: 24px; font-family: 'Space Grotesk', sans-serif;">Change Profile Picture</h2>
                         <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 28px;">
-                            <div id="profile-edit-avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 2.5px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden;">
+                            <div id="profile-edit-avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 2.5px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden; flex-shrink: 0;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 10px;">
