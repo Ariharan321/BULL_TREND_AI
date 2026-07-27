@@ -176,6 +176,51 @@ exports.handler = async function(event, context) {
                 };
             }
             
+            const resendApiKey = process.env.RESEND_API_KEY || 're_RcTptMHS_KwvT8v4KHzHfSgobJ6ngdR53';
+            if (resendApiKey) {
+                try {
+                    const resendUrl = "https://api.resend.com/emails";
+                    const response = await fetch(resendUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${resendApiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            from: "Bull Trend AI <onboarding@resend.dev>",
+                            to: toAddr,
+                            subject: subject,
+                            text: message
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log(`[Resend API Netlify] Email successfully sent to ${toAddr}:`, data);
+                        return {
+                            statusCode: 200,
+                            headers: { 'Access-Control-Allow-Origin': '*' },
+                            body: JSON.stringify({ success: true, simulated: false })
+                        };
+                    } else {
+                        const errText = await response.text();
+                        console.error(`[Resend API Netlify Error] Response not OK: ${errText}`);
+                        return {
+                            statusCode: 500,
+                            headers: { 'Access-Control-Allow-Origin': '*' },
+                            body: JSON.stringify({ error: `Resend API Error: ${errText}` })
+                        };
+                    }
+                } catch (err) {
+                    console.error(`[Resend API Netlify Exception] Failed to send email to ${toAddr}:`, err.message);
+                    return {
+                        statusCode: 500,
+                        headers: { 'Access-Control-Allow-Origin': '*' },
+                        body: JSON.stringify({ error: err.message })
+                    };
+                }
+            }
+            
             console.log("==========================================================================");
             console.log(`📧 [NETLIFY MOCK EMAIL GATEWAY] Sending Alert Email`);
             console.log(`   To:      ${toAddr}`);

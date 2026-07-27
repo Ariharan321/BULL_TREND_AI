@@ -343,7 +343,46 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                     self.send_json({"error": "Missing recipient email address ('to')"}, 400)
                     return
                 
-                # Check Resend API first (bypasses port blocking)
+                smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
+                smtp_port = int(os.environ.get('SMTP_PORT', '587'))
+                smtp_user = os.environ.get('SMTP_USER', 'mr78raj18@gmail.com')
+                smtp_password = os.environ.get('SMTP_PASSWORD', 'kmjgsvdxuyybctmb')
+                
+                smtp_tried = False
+                smtp_success = False
+                smtp_error_msg = None
+                
+                # Try SMTP first (allows sending to any recipient address if SMTP works)
+                if smtp_server and smtp_user and smtp_password:
+                    smtp_tried = True
+                    try:
+                        import smtplib
+                        from email.mime.text import MIMEText
+                        from email.mime.multipart import MIMEMultipart
+                        from email.header import Header
+                        
+                        msg = MIMEMultipart()
+                        msg['From'] = smtp_user
+                        msg['To'] = to_addr
+                        msg['Subject'] = Header(subject, 'utf-8')
+                        msg.attach(MIMEText(message, 'plain', 'utf-8'))
+                        
+                        # Set up connection
+                        server = smtplib.SMTP(smtp_server, smtp_port)
+                        server.starttls()
+                        server.login(smtp_user, smtp_password)
+                        server.sendmail(smtp_user, to_addr, msg.as_string())
+                        server.quit()
+                        
+                        print(f"[SMTP Server] Real email alert successfully sent to {to_addr}", flush=True)
+                        self.send_json({"success": True, "simulated": False})
+                        return
+                    except Exception as err:
+                        smtp_success = False
+                        smtp_error_msg = str(err)
+                        print(f"[SMTP Server Error] Failed to send email to {to_addr} via SMTP: {err}", flush=True)
+                
+                # Fallback to Resend API (bypasses port blocking if SMTP fails or is not set up)
                 resend_api_key = os.environ.get('RESEND_API_KEY', 're_RcTptMHS_KwvT8v4KHzHfSgobJ6ngdR53')
                 if resend_api_key:
                     try:
@@ -377,64 +416,38 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                             except Exception:
                                 pass
                         print(f"[Resend API Error] Failed to send email to {to_addr}: {err_msg}", flush=True)
-                        # If no SMTP fallback exists, return the error now
-                        smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-                        smtp_user = os.environ.get('SMTP_USER', 'mr78raj18@gmail.com')
-                        smtp_password = os.environ.get('SMTP_PASSWORD', 'kmjgsvdxuyybctmb')
-                        if not (smtp_server and smtp_user and smtp_password):
+                        
+                        # If SMTP was tried and failed, return combined error. Otherwise return Resend error.
+                        if smtp_tried:
+                            combined_error = f"SMTP Error: {smtp_error_msg}. Resend Error: {err_msg}"
+                            self.send_json({"success": False, "error": combined_error}, 500)
+                        else:
                             self.send_json({"success": False, "error": f"Resend API Error: {err_msg}"}, 500)
-                            return
-
-                smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-                smtp_port = int(os.environ.get('SMTP_PORT', '587'))
-                smtp_user = os.environ.get('SMTP_USER', 'mr78raj18@gmail.com')
-                smtp_password = os.environ.get('SMTP_PASSWORD', 'kmjgsvdxuyybctmb')
+                        return
                 
-                # Check if real SMTP credentials are set
-                if smtp_server and smtp_user and smtp_password:
-                    try:
-                        import smtplib
-                        from email.mime.text import MIMEText
-                        from email.mime.multipart import MIMEMultipart
-                        from email.header import Header
-                        
-                        msg = MIMEMultipart()
-                        msg['From'] = smtp_user
-                        msg['To'] = to_addr
-                        msg['Subject'] = Header(subject, 'utf-8')
-                        msg.attach(MIMEText(message, 'plain', 'utf-8'))
-                        
-                        # Set up connection
-                        server = smtplib.SMTP(smtp_server, smtp_port)
-                        server.starttls()
-                        server.login(smtp_user, smtp_password)
-                        server.sendmail(smtp_user, to_addr, msg.as_string())
-                        server.quit()
-                        
-                        print(f"[SMTP Server] Real email alert successfully sent to {to_addr}")
-                        self.send_json({"success": True, "simulated": False})
-                    except Exception as err:
-                        print(f"[SMTP Server Error] Failed to send real email to {to_addr}: {err}")
-                        self.send_json({"success": False, "error": str(err)}, 500)
-                else:
-                    # Simulation/Fallback Mode
-                    print("==========================================================================", flush=True)
-                    print(f"[MOCK EMAIL GATEWAY] Sending Alert Email", flush=True)
-                    print(f"   To:      {to_addr}", flush=True)
-                    print(f"   Subject: {subject}", flush=True)
-                    try:
-                        print(f"   Message: {message}", flush=True)
-                    except UnicodeEncodeError:
-                        safe_msg = message.encode('ascii', errors='replace').decode('ascii')
-                        print(f"   Message: {safe_msg}", flush=True)
-                    print("--------------------------------------------------------------------------", flush=True)
-                    print("   [TIP] Setup environment variables to send real emails locally:", flush=True)
-                    print("      set SMTP_SERVER=smtp.gmail.com", flush=True)
-                    print("      set SMTP_PORT=587", flush=True)
-                    print("      set SMTP_USER=your_email@gmail.com", flush=True)
-                    print("      set SMTP_PASSWORD=your_app_password", flush=True)
-                    print("==========================================================================", flush=True)
-                    self.send_json({"success": True, "simulated": True})
+                # If neither succeeded and SMTP failed
+                if smtp_tried and not smtp_success:
+                    self.send_json({"success": False, "error": f"SMTP Error: {smtp_error_msg}"}, 500)
+                    return
+                
+                # Simulation/Fallback Mode (if no credentials are set)
+                print("==========================================================================", flush=True)
+                print(f"[MOCK EMAIL GATEWAY] Sending Alert Email", flush=True)
+                print(f"   To:      {to_addr}", flush=True)
+                print(f"   Subject: {subject}", flush=True)
+                try:
+                    print(f"   Message: {message}", flush=True)
+                except UnicodeEncodeError:
+                    safe_msg = message.encode('ascii', errors='replace').decode('ascii')
+                    print(f"   Message: {safe_msg}", flush=True)
+                print("--------------------------------------------------------------------------", flush=True)
+                print("   [TIP] Setup environment variables to send real emails locally:", flush=True)
+                print("      set SMTP_SERVER=smtp.gmail.com", flush=True)
+                print("      set SMTP_PORT=587", flush=True)
+                print("      set SMTP_USER=your_email@gmail.com", flush=True)
+                print("      set SMTP_PASSWORD=your_app_password", flush=True)
+                print("==========================================================================", flush=True)
+                self.send_json({"success": True, "simulated": True})
                 
         except Exception as e:
             self.send_json({"error": str(e)}, 500)
