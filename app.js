@@ -2478,6 +2478,64 @@ function initTradingSimulator() {
         recalcEstCost();
         saveTradingState();
     });
+
+    // Add Funds Modal Logic
+    const addFundsModal = document.getElementById('add-funds-modal');
+    const addFundsTrigger = document.getElementById('add-funds-trigger');
+    const addFundsCloseBtn = document.getElementById('add-funds-close-btn');
+    const customFundAmount = document.getElementById('custom-fund-amount');
+    const confirmAddFundsBtn = document.getElementById('confirm-add-funds-btn');
+    const presetFundBtns = document.querySelectorAll('.preset-fund-btn');
+
+    if (addFundsTrigger && addFundsModal) {
+        addFundsTrigger.addEventListener('click', () => {
+            customFundAmount.value = '';
+            presetFundBtns.forEach(btn => btn.classList.remove('active'));
+            addFundsModal.classList.remove('hidden');
+        });
+    }
+
+    if (addFundsCloseBtn && addFundsModal) {
+        addFundsCloseBtn.addEventListener('click', () => {
+            addFundsModal.classList.add('hidden');
+        });
+        
+        addFundsModal.addEventListener('click', (e) => {
+            if (e.target === addFundsModal) {
+                addFundsModal.classList.add('hidden');
+            }
+        });
+    }
+
+    presetFundBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            presetFundBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            customFundAmount.value = btn.getAttribute('data-amount');
+        });
+    });
+
+    customFundAmount.addEventListener('input', () => {
+        presetFundBtns.forEach(b => b.classList.remove('active'));
+    });
+
+    if (confirmAddFundsBtn) {
+        confirmAddFundsBtn.addEventListener('click', () => {
+            const amount = parseFloat(customFundAmount.value);
+            if (isNaN(amount) || amount <= 0) {
+                showToast('Please select or enter a valid amount.', 'error');
+                return;
+            }
+
+            tradingState.cash += amount;
+            saveTradingState();
+            showToast(`Successfully added ${formatINR(amount)} to simulated cash!`, 'success');
+            
+            if (addFundsModal) {
+                addFundsModal.classList.add('hidden');
+            }
+        });
+    }
 }
 
 function recalcEstCost() {

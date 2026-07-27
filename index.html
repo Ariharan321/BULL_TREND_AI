@@ -442,7 +442,10 @@
                                     <span class="box-val" id="portfolio-value">₹10,00,000.00</span>
                                 </div>
                                 <div class="metric-box">
-                                    <span class="box-label">Available Cash</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                        <span class="box-label">Available Cash</span>
+                                        <button type="button" id="add-funds-trigger" class="add-funds-btn-trigger" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">+ Add</button>
+                                    </div>
                                     <span class="box-val" id="portfolio-cash">₹10,00,000.00</span>
                                 </div>
                                 <div class="metric-box">
@@ -961,6 +964,34 @@
 
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Add Funds Modal Overlay -->
+    <div id="add-funds-modal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel animate-scale" style="max-width: 420px; width: 90%; padding: 24px; display: flex; flex-direction: column; gap: 20px; position: relative; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <button type="button" id="add-funds-close-btn" class="modal-close-btn" style="position: absolute; top: 16px; right: 16px; font-size: 1.5rem; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+            
+            <div style="text-align: left;">
+                <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 6px;">Add Simulated Funds</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">Select a preset or enter a custom amount of simulated cash to add to your account balance.</p>
+            </div>
+
+            <!-- Preset Buttons Grid -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                <button type="button" class="preset-fund-btn" data-amount="50000" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #fff; font-size: 0.9rem; font-weight: 600; padding: 10px; cursor: pointer; transition: all 0.2s ease;">+ ₹50,000</button>
+                <button type="button" class="preset-fund-btn" data-amount="100000" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #fff; font-size: 0.9rem; font-weight: 600; padding: 10px; cursor: pointer; transition: all 0.2s ease;">+ ₹1,00,000</button>
+                <button type="button" class="preset-fund-btn" data-amount="500000" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #fff; font-size: 0.9rem; font-weight: 600; padding: 10px; cursor: pointer; transition: all 0.2s ease;">+ ₹5,00,000</button>
+                <button type="button" class="preset-fund-btn" data-amount="1000000" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #fff; font-size: 0.9rem; font-weight: 600; padding: 10px; cursor: pointer; transition: all 0.2s ease;">+ ₹10,00,000</button>
+            </div>
+
+            <!-- Custom Amount Input -->
+            <div style="display: flex; flex-direction: column; gap: 6px; text-align: left;">
+                <label for="custom-fund-amount" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Custom Amount (₹)</label>
+                <input type="number" id="custom-fund-amount" min="1" placeholder="Enter custom amount" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; color: #fff; padding: 12px; font-size: 0.95rem; width: 100%; box-sizing: border-box; outline: none; transition: border-color 0.2s ease;">
+            </div>
+
+            <button type="button" id="confirm-add-funds-btn" class="auth-btn-primary" style="width: 100%; padding: 12px; font-weight: 700; font-size: 0.95rem; border-radius: 8px; cursor: pointer;">Add Funds</button>
         </div>
     </div>
 

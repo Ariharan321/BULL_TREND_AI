@@ -1658,6 +1658,31 @@ body {
 }
 
 /* Balance Card */
+.add-funds-btn-trigger:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
+    border-color: rgba(59, 130, 246, 0.6) !important;
+    color: #fff !important;
+}
+.add-funds-btn-trigger:active {
+    transform: scale(0.95);
+}
+.preset-fund-btn {
+    outline: none;
+}
+.preset-fund-btn:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    color: #3b82f6 !important;
+}
+.preset-fund-btn.active {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #fff !important;
+}
+#custom-fund-amount:focus {
+    border-color: #3b82f6 !important;
+}
+
 .balance-card h4 {
     font-size: 1rem;
     color: var(--text-muted);
