@@ -2397,6 +2397,14 @@ function initTradingSimulator() {
 
     // Execute order
     executeBtn.addEventListener('click', () => {
+        const mode = sessionStorage.getItem('auth_mode') || 'guest';
+        if (mode === 'guest') {
+            showToast('Please sign in to buy or sell stocks.', 'warning');
+            authOverlay.classList.remove('hidden');
+            showAuthScreen('login');
+            return;
+        }
+
         const symbol = document.getElementById('trade-symbol').value;
         const qty = parseInt(qtyInput.value);
         
