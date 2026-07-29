@@ -12,6 +12,29 @@ import yfinance as yf
 INFO_CACHE = {}
 SEARCH_RESULT_CACHE = {}
 CACHE_DURATION = 300
+EXCHANGE_RATE_CACHE = {}
+
+def get_exchange_rate(from_curr='USD'):
+    if from_curr == 'INR':
+        return 1.0
+    current_time = time.time()
+    if from_curr in EXCHANGE_RATE_CACHE:
+        cache_time, rate = EXCHANGE_RATE_CACHE[from_curr]
+        if current_time - cache_time < 3600:
+            return rate
+    try:
+        url = f'https://query1.finance.yahoo.com/v8/finance/chart/{from_curr}INR=X?interval=1d&range=1d'
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode('utf-8'))
+        result = data['chart']['result'][0]
+        closes = [p for p in result['indicators']['quote'][0]['close'] if p is not None]
+        rate = closes[-1] if closes else 83.5
+    except Exception as e:
+        print(f"Error fetching exchange rate for {from_curr}: {e}")
+        rate = 83.5
+    EXCHANGE_RATE_CACHE[from_curr] = (current_time, rate)
+    return rate
 
 def get_ticker_info(symbol):
     current_time = time.time()
@@ -50,8 +73,18 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
         self.end_headers()
         self.wfile.write(json.dumps(data).encode('utf-8'))
+
+    def end_headers(self):
+        # Prevent browser from caching static assets (HTML/CSS/JS)
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
         
     def handle_top10(self, query_params):
         try:
@@ -87,12 +120,13 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                             pct_change = 0.0
                             
                         currency = 'INR' if sym.endswith('.NS') or sym.endswith('.BO') else 'USD'
+                        rate = get_exchange_rate(currency)
                         results.append({
                             'symbol': sym,
-                            'price': float(current_price),
-                            'change': float(change),
+                            'price': float(current_price) * rate,
+                            'change': float(change) * rate,
                             'percent_change': float(pct_change),
-                            'currency': currency
+                            'currency': 'INR'
                         })
                 except Exception as e:
                     print(f"Error processing ticker {sym}: {e}")
@@ -116,21 +150,11 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req) as response:
                 return json.loads(response.read().decode('utf-8'))
-                
-        def get_exchange_rate():
-            try:
-                data = fetch_json('https://query1.finance.yahoo.com/v8/finance/chart/USDINR=X?interval=1d&range=1d')
-                result = data['chart']['result'][0]
-                closes = [p for p in result['indicators']['quote'][0]['close'] if p is not None]
-                return closes[-1] if closes else 83.5
-            except Exception:
-                return 83.5
 
         try:
             if action == 'chart':
                 symbol = query_params.get('symbol', ['RELIANCE.NS'])[0].upper()
                 is_indian = '.NS' in symbol or '.BO' in symbol
-                exchange_rate = 1.0
                 
                 range_param = query_params.get('range', ['2y'])[0]
                 interval_param = query_params.get('interval', ['1d'])[0]
@@ -138,6 +162,9 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?interval={interval_param}&range={range_param}"
                 data = fetch_json(url)
                 result = data['chart']['result'][0]
+                meta = result['meta']
+                currency = meta.get('currency', 'INR' if is_indian else 'USD')
+                exchange_rate = get_exchange_rate(currency)
                 
                 quote = result['indicators']['quote'][0]
                 timestamps = result.get('timestamp', [])
@@ -148,7 +175,7 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 for i in range(len(timestamps)):
                     if quote.get('close') and i < len(quote['close']) and quote['close'][i] is not None:
                         price_in_native = quote['close'][i]
-                        prices.append(price_in_native)
+                        prices.append(price_in_native * exchange_rate)
                         dt = datetime.datetime.fromtimestamp(timestamps[i])
                         if is_intraday:
                             labels.append(dt.strftime('%H:%M'))
@@ -158,7 +185,6 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                 if not prices:
                     raise Exception('Empty data')
                     
-                meta = result['meta']
                 raw_price = meta.get('regularMarketPrice')
                 if raw_price is not None:
                     meta_price = raw_price * exchange_rate
@@ -254,7 +280,7 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                     "roe": yf_roe,
                     "owner": yf_owner,
                     "description": yf_desc,
-                    "currency": meta.get('currency', 'INR' if is_indian else 'USD')
+                    "currency": "INR"
                 })
                 
             elif action == 'top10':
@@ -270,16 +296,15 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                         data = fetch_json(url)
                         result = data['chart']['result'][0]
                         meta = result['meta']
-                        
-                        is_indian = '.NS' in sym or '.BO' in sym
-                        rate = 1.0
+                        currency = meta.get('currency', 'USD')
+                        rate = get_exchange_rate(currency)
                         
                         raw_price = meta.get('regularMarketPrice') or meta.get('chartPreviousClose')
                         raw_prev_close = meta.get('chartPreviousClose') or raw_price
                         
                         price = raw_price * rate if raw_price is not None else None
                         prev_close = raw_prev_close * rate if raw_prev_close is not None else None
-                        change = price - prev_close
+                        change = price - prev_close if price is not None and prev_close is not None else 0.0
                         pct = (change / prev_close * 100) if prev_close else 0.0
                         
                         return {
@@ -289,7 +314,7 @@ class StockProxyHandler(http.server.SimpleHTTPRequestHandler):
                             "prevClose": prev_close,
                             "change": change,
                             "percent_change": pct,
-                            "currency": meta.get('currency', 'USD')
+                            "currency": "INR"
                         }
                     except Exception as e:
                         print(f"Failed to fetch quote for {sym}: {e}")
@@ -470,8 +495,6 @@ if __name__ == '__main__':
         '.svg': 'image/svg+xml'
     })
     
-    # Allow port reuse to avoid 'Address already in use' errors on quick restarts
-    socketserver.ThreadingTCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer(("", PORT), handler) as httpd:
         print(f"Bull Trend AI local server running at http://localhost:{PORT}")
         try:

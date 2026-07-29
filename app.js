@@ -672,6 +672,15 @@ function setAlert() {
         return;
     }
     
+    // Request permission for system notifications
+    if (window.Notification && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                console.log("System notifications enabled.");
+            }
+        });
+    }
+    
     const targetPrice = parseFloat(priceStr);
     activeAlert = { price: targetPrice, condition, email, currency: currentStockData ? currentStockData.currency : 'INR' };
     const condText = condition === 'above' ? 'goes above (^)' : (condition === 'below' ? 'drops below (˅)' : 'equals (=)');
@@ -679,7 +688,7 @@ function setAlert() {
     activeAlertContainer.classList.remove('hidden');
     alertPriceInput.value = '';
     alertEmailInput.value = '';
-    showToast('Alert created successfully with email notifications!', 'success');
+    showToast('Alert created successfully with system & email notifications!', 'success');
 }
 
 function clearAlert() {
@@ -701,6 +710,18 @@ function checkAlerts(currentPrice) {
         
         // App Notification Toast
         showToast(msg, 'alert');
+        
+        // System Native Notification
+        if (window.Notification && Notification.permission === "granted") {
+            try {
+                new Notification("Bull Trend AI Price Alert", {
+                    body: msg,
+                    icon: "logo.png"
+                });
+            } catch (e) {
+                console.error("Failed to trigger system notification:", e);
+            }
+        }
         
         // Email Notification Trigger
         const email = activeAlert.email;
@@ -1221,8 +1242,13 @@ function showAuthScreen(screenId) {
 function enterDashboard(mode, name = '', username = '') {
     authOverlay.classList.add('hidden');
     
-    headerAuthButtons.classList.add('hidden');
-    headerUserProfile.classList.remove('hidden');
+    if (mode === 'guest') {
+        headerAuthButtons.classList.remove('hidden');
+        headerUserProfile.classList.add('hidden');
+    } else {
+        headerAuthButtons.classList.add('hidden');
+        headerUserProfile.classList.remove('hidden');
+    }
     
     // Perform initial profile UI update
     updateProfileUI();
@@ -1568,7 +1594,8 @@ function showCompanyDetailsModal() {
     
     // 8. Face Value
     const faceVal = data.faceValue !== undefined && data.faceValue !== null ? data.faceValue : details.face;
-    modalFaceValue.textContent = formatStockCurrency(faceVal, data.currency);
+    const faceCurrency = isIndian ? data.currency : 'USD';
+    modalFaceValue.textContent = formatStockCurrency(faceVal, faceCurrency);
     
     // 9. ROCE
     modalRoce.textContent = data.roce !== undefined && data.roce !== null ? data.roce : details.roce;
@@ -2380,7 +2407,8 @@ function initTradingSimulator() {
         executeBtn.className = 'confirm-trade-btn buy';
         executeBtn.textContent = 'Confirm Purchase';
         document.querySelector('.trade-summary .summary-row span:first-child').textContent = 'Estimated Cost';
-        recalcEstCost();
+        qtyInput.value = '';
+        populateTradeForm();
     });
 
     sellActionBtn.addEventListener('click', () => {
@@ -2390,7 +2418,8 @@ function initTradingSimulator() {
         executeBtn.className = 'confirm-trade-btn sell';
         executeBtn.textContent = 'Confirm Sale';
         document.querySelector('.trade-summary .summary-row span:first-child').textContent = 'Estimated Revenue';
-        recalcEstCost();
+        qtyInput.value = '';
+        populateTradeForm();
     });
 
     qtyInput.addEventListener('input', recalcEstCost);
@@ -3228,6 +3257,15 @@ function updateProfileUI() {
     const username = sessionStorage.getItem('auth_username') || 'guest';
     const mode = sessionStorage.getItem('auth_mode') || 'guest';
     const avatar = sessionStorage.getItem('auth_avatar') || '';
+    
+    // Update header login/signup buttons and profile dropdown based on guest mode
+    if (mode === 'guest') {
+        if (headerAuthButtons) headerAuthButtons.classList.remove('hidden');
+        if (headerUserProfile) headerUserProfile.classList.add('hidden');
+    } else {
+        if (headerAuthButtons) headerAuthButtons.classList.add('hidden');
+        if (headerUserProfile) headerUserProfile.classList.remove('hidden');
+    }
     
     // Update header profile display
     if (userDisplayName) userDisplayName.textContent = mode === 'logged_in' ? name : 'Guest';

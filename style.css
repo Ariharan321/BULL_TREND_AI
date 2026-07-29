@@ -3,8 +3,8 @@
     --bg-darker: #08080c;               /* Deep background behind everything */
     --panel-bg: #11111a;                /* Solid card backgrounds as seen in screenshot */
     --panel-border: #1d1d2b;            /* Sleek dark borders between components */
-    --primary: #3b82f6;                 /* Vibrant Electric Blue for buttons and CTA */
-    --primary-hover: #2563eb;           /* Electric blue hover highlight */
+    --primary: #00e699;                 /* Vibrant Neon Green/Mint for buttons and CTA */
+    --primary-hover: #00b377;           /* Neon green hover highlight */
     --text-main: #f8fafc;
     --text-muted: #718096;              /* Soft dark slate muted text */
     --success: #00e699;                 /* Bright minty green/teal for positive flags/trends */
@@ -22,7 +22,7 @@ body {
     color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
-    background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05), transparent 45%),
+    background: radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.2), transparent 50%),
                 radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.02), transparent 45%),
                 var(--bg-darker);
 }
@@ -89,7 +89,7 @@ body {
     -webkit-text-fill-color: transparent;
 }
 .logo h2 .highlight {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #00e699 0%, #059669 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -653,7 +653,7 @@ body {
 }
 
 .auth-card h2 .highlight {
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #00e699 0%, #10b981 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }

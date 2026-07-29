@@ -15,7 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 <body>
     <div class="app-container">
@@ -88,7 +88,7 @@
                 </div>
                 <div id="header-user-profile" class="user-profile hidden" style="position: relative;">
                     <button id="profile-dropdown-btn" class="profile-toggle-btn" aria-haspopup="true" aria-expanded="false" style="border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px 4px 6px; gap: 8px;">
-                        <div id="header-profile-avatar-container" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden; flex-shrink: 0;">
+                        <div id="header-profile-avatar-container" style="width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(0, 230, 153, 0.1); overflow: hidden; flex-shrink: 0;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </div>
                         <span id="user-display-name" class="username-tag" style="font-weight: 700; color: #fff;">Guest</span>
@@ -97,7 +97,7 @@
                     <!-- Dropdown Menu -->
                     <div id="profile-dropdown-menu" class="dropdown-menu glass-panel hidden" style="width: 260px;">
                         <div class="dropdown-header" style="gap: 16px;">
-                            <div id="dropdown-profile-avatar-container" style="width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(59, 130, 246, 0.1); overflow: hidden; flex-shrink: 0;">
+                            <div id="dropdown-profile-avatar-container" style="width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(0, 230, 153, 0.1); overflow: hidden; flex-shrink: 0;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             </div>
                             <div class="dropdown-user-info">
@@ -567,7 +567,7 @@
                                 <div class="metric-box">
                                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                                         <span class="box-label">Available Cash</span>
-                                        <button type="button" id="add-funds-trigger" class="add-funds-btn-trigger" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">+ Add</button>
+                                        <button type="button" id="add-funds-trigger" class="add-funds-btn-trigger" style="background: rgba(0, 230, 153, 0.1); border: 1px solid rgba(0, 230, 153, 0.3); color: #00e699; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">+ Add</button>
                                     </div>
                                     <span class="box-val" id="portfolio-cash">₹10,00,000.00</span>
                                 </div>
@@ -1180,6 +1180,6 @@
     </div>
 
     <script src="prediction.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=2.3"></script>
 </body>
 </html>

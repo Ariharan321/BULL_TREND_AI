@@ -1,3 +1,6 @@
+let EXCHANGE_RATE_CACHE = {};
+let CACHE_TIME = {};
+
 exports.handler = async function(event, context) {
     const action = event.queryStringParameters.action || 'chart';
     
@@ -10,14 +13,23 @@ exports.handler = async function(event, context) {
         return await response.json();
     }
 
-    // Helper to fetch live USD/INR exchange rate
-    async function getExchangeRate() {
+    // Helper to fetch live exchange rate
+    async function getExchangeRate(fromCurrency = 'USD') {
+        if (fromCurrency === 'INR') return 1.0;
+        const now = Date.now();
+        if (EXCHANGE_RATE_CACHE[fromCurrency] && (now - CACHE_TIME[fromCurrency] < 3600000)) {
+            return EXCHANGE_RATE_CACHE[fromCurrency];
+        }
         try {
-            const data = await fetchJson('https://query1.finance.yahoo.com/v8/finance/chart/USDINR=X?interval=1d&range=1d');
+            const data = await fetchJson(`https://query1.finance.yahoo.com/v8/finance/chart/${fromCurrency}INR=X?interval=1d&range=1d`);
             const quote = data.chart.result[0].indicators.quote[0];
             const prices = quote.close.filter(p => p !== null);
-            return prices[prices.length - 1] || 83.5; // fallback to 83.5 if fails
+            const rate = prices[prices.length - 1] || 83.5;
+            EXCHANGE_RATE_CACHE[fromCurrency] = rate;
+            CACHE_TIME[fromCurrency] = now;
+            return rate;
         } catch(e) {
+            console.error(`Error fetching exchange rate for ${fromCurrency}:`, e.message);
             return 83.5; 
         }
     }
@@ -32,11 +44,13 @@ exports.handler = async function(event, context) {
             
             // Check if US stock
             const isIndian = symbol.includes('.NS') || symbol.includes('.BO');
-            const exchangeRate = 1;
             
             const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}`;
             const data = await fetchJson(url);
             const result = data.chart.result[0];
+            
+            const currency = result.meta.currency || (isIndian ? 'INR' : 'USD');
+            const exchangeRate = await getExchangeRate(currency);
             
             const quote = result.indicators.quote[0];
             const timestamps = result.timestamp || [];
@@ -47,7 +61,7 @@ exports.handler = async function(event, context) {
             for (let i = 0; i < timestamps.length; i++) {
                 if (quote.close && quote.close[i] !== null && quote.close[i] !== undefined) {
                     const priceInNative = quote.close[i];
-                    prices.push(priceInNative);
+                    prices.push(priceInNative * exchangeRate);
                     const date = new Date(timestamps[i] * 1000);
                     if (isIntraday) {
                         labels.push(date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }));
@@ -86,7 +100,7 @@ exports.handler = async function(event, context) {
                     regularMarketDayHigh,
                     regularMarketDayLow,
                     regularMarketVolume,
-                    currency: result.meta.currency || (isIndian ? 'INR' : 'USD')
+                    currency: 'INR'
                 })
             };
         } 
@@ -105,7 +119,8 @@ exports.handler = async function(event, context) {
                     const meta = result.meta;
                     
                     const isIndian = symbol.includes('.NS') || symbol.includes('.BO');
-                    const rate = 1;
+                    const currency = meta.currency || (isIndian ? 'INR' : 'USD');
+                    const rate = await getExchangeRate(currency);
                     
                     const price = (meta.regularMarketPrice || meta.chartPreviousClose) * rate;
                     const prevClose = meta.chartPreviousClose * rate;
@@ -119,7 +134,7 @@ exports.handler = async function(event, context) {
                         prevClose: prevClose,
                         change: change,
                         percent_change: pct,
-                        currency: meta.currency || (isIndian ? 'INR' : 'USD')
+                        currency: 'INR'
                     };
                 } catch(e) {
                     console.error(`Failed to fetch quote for ${symbol}:`, e.message);
