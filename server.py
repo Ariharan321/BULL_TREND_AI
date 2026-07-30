@@ -495,6 +495,7 @@ if __name__ == '__main__':
         '.svg': 'image/svg+xml'
     })
     
+    socketserver.TCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer(("", PORT), handler) as httpd:
         print(f"Bull Trend AI local server running at http://localhost:{PORT}")
         try:
