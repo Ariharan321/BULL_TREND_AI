@@ -62,6 +62,10 @@ let alertSelectedSymbol = 'RELIANCE.NS';
 let alertSelectedPrice = 0;
 let alertSelectedCurrency = 'INR';
 let stockChart = null;
+let tradeChart = null;
+let currentTradeChartRange = '1d';
+let currentTradeChartInterval = '15m';
+let currentTradeChartLimit = null;
 let currentPrice = 0;
 let previousClose = 0;
 let updateInterval = null;
@@ -3296,6 +3300,9 @@ function populateTradeForm() {
         if (executeBtn) {
             executeBtn.disabled = false;
         }
+        
+        // Fetch trade chart data for active trading stock!
+        fetchTradeChartData(currentSymbol);
     } else {
         symbolField.value = '';
         priceField.value = '₹0.00';
@@ -3304,6 +3311,170 @@ function populateTradeForm() {
         }
     }
     recalcEstCost();
+}
+
+// Trade View Line Chart System
+function initTradeChart() {
+    const canvas = document.getElementById('trade-chart-canvas');
+    if (!canvas) return;
+    
+    if (tradeChart) {
+        try {
+            tradeChart.destroy();
+        } catch(e) {
+            console.error("Error destroying tradeChart:", e);
+        }
+        tradeChart = null;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+    
+    tradeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Price',
+                data: [],
+                borderColor: '#3b82f6',
+                borderWidth: 1.5,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#3b82f6',
+                pointHoverBorderWidth: 1.5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    titleColor: '#f8fafc',
+                    bodyColor: '#f8fafc',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    borderWidth: 1,
+                    padding: 8,
+                    titleFont: { size: 10 },
+                    bodyFont: { size: 10 },
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed.y.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    border: { display: true, color: 'rgba(255, 255, 255, 0.08)' },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: "'Outfit', sans-serif", size: 9 },
+                        maxTicksLimit: 6
+                    }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                    border: { display: false },
+                    ticks: {
+                        color: '#64748b',
+                        font: { family: "'Outfit', sans-serif", size: 9 },
+                        maxTicksLimit: 5
+                    }
+                }
+            }
+        }
+    });
+}
+
+async function fetchTradeChartData(symbol) {
+    if (!symbol) return;
+    const tickerNameSpan = document.getElementById('trade-chart-ticker');
+    if (tickerNameSpan) {
+        tickerNameSpan.textContent = symbol.replace('.NS', '').replace('.BO', '');
+    }
+    
+    const loader = document.getElementById('trade-chart-loader');
+    if (loader) loader.classList.remove('hidden');
+    
+    try {
+        const cleanSymbol = symbol.trim().toUpperCase();
+        const res = await fetch(`/.netlify/functions/stock?action=chart&symbol=${encodeURIComponent(cleanSymbol)}&range=${currentTradeChartRange}&interval=${currentTradeChartInterval}`);
+        const data = await res.json();
+        
+        if (data.error || !data.prices || data.prices.length === 0) {
+            console.error("Trade chart data fetch error:", data.error);
+            return;
+        }
+        
+        let labels = data.labels || [];
+        let prices = data.prices || [];
+        const currency = data.currency || 'INR';
+        
+        // If 2W (2 weeks) limit is set, slice last 14 data points
+        if (currentTradeChartLimit && prices.length > currentTradeChartLimit) {
+            labels = labels.slice(-currentTradeChartLimit);
+            prices = prices.slice(-currentTradeChartLimit);
+        }
+        
+        // Update Chart
+        if (!tradeChart) {
+            initTradeChart();
+        }
+        
+        const symbolChar = getCurrencySymbol(currency);
+        tradeChart.data.labels = labels;
+        tradeChart.data.datasets[0].data = prices;
+        tradeChart.data.datasets[0].label = `Price (${symbolChar})`;
+        
+        // Tooltip formatting
+        tradeChart.options.plugins.tooltip.callbacks.label = function(context) {
+            return `${symbolChar} ${context.parsed.y.toFixed(2)}`;
+        };
+        
+        // Scales formatting
+        tradeChart.options.scales.y.ticks.callback = function(value) {
+            return `${symbolChar} ${value}`;
+        };
+        
+        // Determine color based on trend
+        const isPositive = prices.length > 1 ? prices[prices.length - 1] >= prices[0] : true;
+        const color = isPositive ? '#00e699' : '#ef4444';
+        
+        const canvas = document.getElementById('trade-chart-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+            if (isPositive) {
+                gradient.addColorStop(0, 'rgba(0, 230, 153, 0.3)');
+                gradient.addColorStop(1, 'rgba(0, 230, 153, 0.0)');
+            } else {
+                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)');
+                gradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+            }
+            tradeChart.data.datasets[0].borderColor = color;
+            tradeChart.data.datasets[0].backgroundColor = gradient;
+            tradeChart.data.datasets[0].pointHoverBorderColor = color;
+        }
+        
+        tradeChart.update();
+        
+    } catch (e) {
+        console.error("Failed to fetch trade chart data:", e);
+    } finally {
+        if (loader) loader.classList.add('hidden');
+    }
 }
 
 // --- NEW FEATURES LOGIC ---
@@ -3515,6 +3686,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial header search visibility update
     updateHeaderSearchVisibility();
+
+    // Initialize Simulated Trading filters
+    document.querySelectorAll('.trade-filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const range = e.target.getAttribute('data-range');
+            const interval = e.target.getAttribute('data-interval');
+            const limit = e.target.getAttribute('data-limit');
+            
+            document.querySelectorAll('.trade-filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255, 255, 255, 0.03)';
+                b.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                b.style.color = 'var(--text-muted)';
+            });
+            
+            e.target.classList.add('active');
+            e.target.style.background = 'rgba(0, 230, 153, 0.1)';
+            e.target.style.borderColor = 'rgba(0, 230, 153, 0.3)';
+            e.target.style.color = 'var(--primary)';
+            
+            currentTradeChartRange = range;
+            currentTradeChartInterval = interval;
+            currentTradeChartLimit = limit ? parseInt(limit) : null;
+            
+            fetchTradeChartData(currentSymbol);
+        });
+    });
 });
 
 // --- PROFILE SETTINGS MODAL ENGINE ---

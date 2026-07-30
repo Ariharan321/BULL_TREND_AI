@@ -682,6 +682,24 @@
                             </div>
                         </div>
 
+                        <!-- Trade Stock Chart Card -->
+                        <div class="card trade-chart-card glass-panel" style="flex: 1.2; min-height: 250px; display: flex; flex-direction: column; padding: 16px; margin-bottom: 20px;">
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: none; padding: 0;">
+                                <h3 style="font-size: 1.1rem; margin: 0; font-family: 'Space Grotesk', sans-serif;">Trade Chart - <span id="trade-chart-ticker" style="color: var(--primary);">AAPL</span></h3>
+                                <div class="trade-chart-filters" style="display: flex; gap: 6px;">
+                                    <button type="button" class="trade-filter-btn active" data-range="1d" data-interval="15m" style="background: rgba(0, 230, 153, 0.1); border: 1px solid rgba(0, 230, 153, 0.3); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">1D</button>
+                                    <button type="button" class="trade-filter-btn" data-range="1mo" data-interval="1d" data-limit="14" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">2W</button>
+                                    <button type="button" class="trade-filter-btn" data-range="1mo" data-interval="1d" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">1M</button>
+                                </div>
+                            </div>
+                            <div class="trade-chart-container" style="position: relative; flex: 1; width: 100%;">
+                                <canvas id="trade-chart-canvas" style="max-height: 190px;"></canvas>
+                                <div id="trade-chart-loader" class="loader hidden" style="position: absolute; top:0; left:0; right:0; bottom:0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); border-radius: 8px; z-index: 10;">
+                                    <div class="spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Order History Card -->
                         <div class="card order-history-card glass-panel" style="max-height: 300px; display: flex; flex-direction: column;">
                             <div class="card-header">
