@@ -350,7 +350,7 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
             updateChart(filteredData.labels, filteredData.prices, changeValue >= 0, data.currency);
         }
         
-        checkAlerts(currentPrice);
+        checkAlerts(data.symbol, currentPrice);
         
         currentStockData = data;
         if (typeof updateWatchlistButtonState === 'function') {
