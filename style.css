@@ -60,18 +60,16 @@ body {
     margin-bottom: 40px;
 }
 .logo-container {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 2px;
-    border-radius: 8px;
+    background: transparent;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    width: 42px;
-    height: 42px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    border: none;
+    width: 52px;
+    height: 52px;
     flex-shrink: 0;
+    box-shadow: none;
 }
 .logo-img {
     width: 100%;
@@ -623,17 +621,16 @@ body {
 }
 
 .auth-logo {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 3px;
-    border-radius: 12px;
+    background: transparent;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 54px;
-    height: 54px;
+    width: 68px;
+    height: 68px;
     margin-bottom: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border: none;
+    box-shadow: none;
 }
 
 .auth-logo img {
