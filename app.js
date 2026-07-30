@@ -9,6 +9,7 @@ const changePercentEl = document.getElementById('change-percent');
 const lastUpdatedEl = document.getElementById('last-updated');
 const trendIconEl = document.getElementById('trend-icon');
 const chartLoader = document.getElementById('chart-loader');
+const headerSearchContainer = document.querySelector('.header .search-container');
 
 // Modal Elements
 const knowMoreBtn = document.getElementById('know-more-btn');
@@ -631,6 +632,16 @@ function runAiPrediction() {
 }
 
 
+function updateHeaderSearchVisibility() {
+    if (!headerSearchContainer) return;
+    const activeView = document.querySelector('.view-section.active');
+    if (activeView && activeView.id === 'view-alerts') {
+        headerSearchContainer.classList.add('hidden');
+    } else {
+        headerSearchContainer.classList.remove('hidden');
+    }
+}
+
 // --- TABS & NAVIGATION ---
 document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', (e) => {
@@ -646,6 +657,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
         // Show target view
         const targetId = item.getAttribute('data-target');
         document.getElementById(targetId).classList.add('active');
+        
+        // Update header search visibility
+        updateHeaderSearchVisibility();
         
         if (targetId === 'view-insights') {
             loadMarketInsights();
@@ -2046,6 +2060,9 @@ function createMoverRow(stock) {
         const dashView = document.getElementById('view-dashboard');
         if (dashView) dashView.classList.add('active');
         
+        // Update header search visibility
+        updateHeaderSearchVisibility();
+        
         symbolInput.value = stock.symbol;
         searchBtn.click();
     });
@@ -2174,6 +2191,9 @@ function createModalStockRow(stock) {
         document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
         const dashView = document.getElementById('view-dashboard');
         if (dashView) dashView.classList.add('active');
+        
+        // Update header search visibility
+        updateHeaderSearchVisibility();
         
         symbolInput.value = stock.symbol;
         searchBtn.click();
@@ -2457,6 +2477,9 @@ function createIndexStockRow(stock) {
         document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
         const dashView = document.getElementById('view-dashboard');
         if (dashView) dashView.classList.add('active');
+        
+        // Update header search visibility
+        updateHeaderSearchVisibility();
         
         symbolInput.value = stock.symbol;
         searchBtn.click();
@@ -3490,6 +3513,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial alert system rendering
     renderActiveAlerts();
     fetchAlertStockData(currentSymbol);
+
+    // Initial header search visibility update
+    updateHeaderSearchVisibility();
 });
 
 // --- PROFILE SETTINGS MODAL ENGINE ---
