@@ -356,7 +356,6 @@ async function fetchStockData(symbol, isBackgroundUpdate = false, isInitialLoad 
         if (aiStockNameEl) aiStockNameEl.textContent = data.name || data.symbol;
         if (aiStockTickerEl) aiStockTickerEl.textContent = data.symbol.replace('.NS', '');
         aiTickerName.textContent = data.symbol.replace('.NS', '');
-        document.getElementById('alert-ticker-name').textContent = data.symbol.replace('.NS', '');
 
     } catch (error) {
         console.error('Error fetching stock data:', error);
