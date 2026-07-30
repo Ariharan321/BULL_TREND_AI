@@ -341,13 +341,38 @@
             <div id="view-alerts" class="view-section">
                 <div class="alerts-grid-layout">
                     <!-- Left: Create Alert -->
-                    <div class="card alert-card glass-panel">
+                    <div class="card alert-card glass-panel" style="position: relative;">
                         <h3>Set Price Alert</h3>
                         <p class="subtitle">Get notified when target is reached for <span class="highlight" id="alert-ticker-name">RELIANCE</span></p>
                         
                         <div class="alert-form">
+                            <!-- Stock Search Selector -->
+                            <div class="input-group" style="position: relative; margin-bottom: 12px;">
+                                <label>Search Stock</label>
+                                <div class="search-container glass-panel" style="width: 100%; border: 1px solid rgba(255, 255, 255, 0.08); padding: 4px 12px; display: flex; align-items: center; background: rgba(0,0,0,0.2);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted); margin-right: 8px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <input type="text" id="alert-stock-search" placeholder="Type stock name or symbol..." style="font-size: 0.9rem; padding: 6px 0; width: 100%; background: transparent; border: none; color: var(--text-main); outline: none;">
+                                </div>
+                                <div id="alert-stock-suggestions" class="suggestions-box hidden" style="position: absolute; top: 100%; left: 0; width: 100%; z-index: 1000; background: #11111a; border: 1px solid var(--panel-border); border-radius: 8px; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5);"></div>
+                            </div>
+
+                            <!-- Quick Suggestion Chips -->
+                            <div class="input-group" style="margin-bottom: 16px;">
+                                <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; display: block;">Quick Suggestions</label>
+                                <div class="quick-suggestion-chips" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                    <button type="button" class="chip-btn" data-symbol="RELIANCE.NS">RELIANCE</button>
+                                    <button type="button" class="chip-btn" data-symbol="TCS.NS">TCS</button>
+                                    <button type="button" class="chip-btn" data-symbol="HDFCBANK.NS">HDFCBANK</button>
+                                    <button type="button" class="chip-btn" data-symbol="AAPL">AAPL</button>
+                                    <button type="button" class="chip-btn" data-symbol="GOOGL">GOOGL</button>
+                                </div>
+                            </div>
+
                             <div class="input-group">
-                                <label>Target Price (₹)</label>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label>Target Price (₹)</label>
+                                    <span id="alert-current-price-display" style="font-size: 0.8rem; color: var(--primary); font-weight: 500;">Current: ₹ --</span>
+                                </div>
                                 <input type="number" id="alert-price" placeholder="e.g. 3000">
                             </div>
                             <div class="input-group">
@@ -364,9 +389,16 @@
                             </div>
                             <button id="set-alert-btn" class="btn-primary full-width">Create Alert</button>
                         </div>
-                        <div id="active-alert-container" class="active-alert hidden">
-                            <p><strong>Active Alert:</strong> <span id="active-alert-text"></span></p>
-                            <button id="clear-alert-btn" class="btn-secondary">Cancel</button>
+
+                        <!-- Active Alerts List -->
+                        <div id="active-alerts-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+                            <h4 style="margin-bottom: 12px; color: var(--text-main); font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center;">
+                                <span>Active Alerts</span>
+                                <span id="active-alerts-count" style="background: rgba(0, 230, 153, 0.15); color: var(--primary); font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 700;">0</span>
+                            </h4>
+                            <div id="active-alerts-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto;">
+                                <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 16px;">No active alerts set.</div>
+                            </div>
                         </div>
                     </div>
 

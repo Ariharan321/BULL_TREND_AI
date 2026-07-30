@@ -41,9 +41,11 @@ const alertPriceInput = document.getElementById('alert-price');
 const alertConditionSelect = document.getElementById('alert-condition');
 const alertEmailInput = document.getElementById('alert-email');
 const setAlertBtn = document.getElementById('set-alert-btn');
-const activeAlertContainer = document.getElementById('active-alert-container');
-const activeAlertText = document.getElementById('active-alert-text');
-const clearAlertBtn = document.getElementById('clear-alert-btn');
+const activeAlertsList = document.getElementById('active-alerts-list');
+const activeAlertsCount = document.getElementById('active-alerts-count');
+const alertStockSearch = document.getElementById('alert-stock-search');
+const alertStockSuggestions = document.getElementById('alert-stock-suggestions');
+const alertCurrentPriceDisplay = document.getElementById('alert-current-price-display');
 const toastContainer = document.getElementById('toast-container');
 
 // AI Elements
@@ -55,11 +57,14 @@ const aiStockTickerEl = document.getElementById('ai-stock-ticker');
 
 // State
 let currentSymbol = 'RELIANCE.NS';
+let alertSelectedSymbol = 'RELIANCE.NS';
+let alertSelectedPrice = 0;
+let alertSelectedCurrency = 'INR';
 let stockChart = null;
 let currentPrice = 0;
 let previousClose = 0;
 let updateInterval = null;
-let activeAlert = null;
+let activeAlerts = JSON.parse(localStorage.getItem('activeAlerts') || '[]');
 let currentStockData = null;
 let insightsStockData = [];
 let activeStockDetails = null; // Stores current stock full metadata response
@@ -657,6 +662,58 @@ document.querySelectorAll('.nav-item').forEach(item => {
 
 
 // Alert System
+// Alert System
+function renderActiveAlerts() {
+    if (!activeAlertsList) return;
+    activeAlertsList.innerHTML = '';
+    
+    if (activeAlerts.length === 0) {
+        activeAlertsList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 16px;">No active alerts set.</div>`;
+        if (activeAlertsCount) activeAlertsCount.textContent = '0';
+        return;
+    }
+    
+    if (activeAlertsCount) activeAlertsCount.textContent = activeAlerts.length;
+    
+    activeAlerts.forEach(alert => {
+        const symbolBase = alert.symbol.replace('.NS', '').replace('.BO', '');
+        const condText = alert.condition === 'above' ? 'goes above (^)' : (alert.condition === 'below' ? 'drops below (˅)' : 'equals (=)');
+        
+        const div = document.createElement('div');
+        div.className = 'active-alert-item';
+        div.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-weight: 700; color: #fff;">
+                    ${symbolBase} 
+                    <span style="font-weight: normal; color: var(--text-muted); font-size: 0.75rem;">(${alert.condition})</span>
+                </div>
+                <div style="color: var(--primary); font-family: monospace; font-size: 0.8rem;">
+                    Target: ${formatStockCurrency(alert.price, alert.currency)}
+                </div>
+            </div>
+            <button class="delete-alert-btn" data-id="${alert.id}" title="Remove Alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        `;
+        
+        // Add delete listener
+        div.querySelector('.delete-alert-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(e.currentTarget.getAttribute('data-id'));
+            deleteAlert(id);
+        });
+        
+        activeAlertsList.appendChild(div);
+    });
+}
+
+function deleteAlert(id) {
+    activeAlerts = activeAlerts.filter(a => a.id !== id);
+    localStorage.setItem('activeAlerts', JSON.stringify(activeAlerts));
+    renderActiveAlerts();
+    showToast('Alert removed.', 'success');
+}
+
 function setAlert() {
     const priceStr = alertPriceInput.value;
     const condition = alertConditionSelect.value;
@@ -682,88 +739,135 @@ function setAlert() {
     }
     
     const targetPrice = parseFloat(priceStr);
-    activeAlert = { price: targetPrice, condition, email, currency: currentStockData ? currentStockData.currency : 'INR' };
-    const condText = condition === 'above' ? 'goes above (^)' : (condition === 'below' ? 'drops below (˅)' : 'equals (=)');
-    activeAlertText.innerHTML = `Alert when price <strong>${condText}</strong> ${formatStockCurrency(targetPrice, activeAlert.currency)} (Email to: <strong>${email}</strong>)`;
-    activeAlertContainer.classList.remove('hidden');
+    const newAlert = {
+        id: Date.now(),
+        symbol: alertSelectedSymbol,
+        price: targetPrice,
+        condition,
+        email,
+        currency: alertSelectedCurrency
+    };
+    
+    activeAlerts.push(newAlert);
+    localStorage.setItem('activeAlerts', JSON.stringify(activeAlerts));
+    
+    renderActiveAlerts();
     alertPriceInput.value = '';
     alertEmailInput.value = '';
     showToast('Alert created successfully with system & email notifications!', 'success');
 }
 
-function clearAlert() {
-    activeAlert = null;
-    activeAlertContainer.classList.add('hidden');
-    showToast('Alert cancelled.', 'success');
+async function fetchAlertStockData(symbol) {
+    if (!symbol) return;
+    try {
+        const cleanSymbol = symbol.trim().toUpperCase();
+        const res = await fetch(`/.netlify/functions/stock?action=chart&symbol=${encodeURIComponent(cleanSymbol)}&range=1d&interval=1d`);
+        const data = await res.json();
+        
+        if (data.error) {
+            console.error("Alert stock data fetch error:", data.error);
+            return;
+        }
+        
+        alertSelectedSymbol = data.symbol;
+        alertSelectedPrice = data.price;
+        alertSelectedCurrency = data.currency;
+        
+        // Update UI displays
+        document.getElementById('alert-ticker-name').textContent = data.symbol.replace('.NS', '').replace('.BO', '');
+        if (alertCurrentPriceDisplay) {
+            alertCurrentPriceDisplay.textContent = `Current: ${formatStockCurrency(data.price, data.currency)}`;
+        }
+        alertPriceInput.value = data.price.toFixed(2);
+        
+    } catch (e) {
+        console.error("Failed to fetch alert stock price:", e);
+    }
 }
 
-function checkAlerts(currentPrice) {
-    if (!activeAlert) return;
-    let triggered = false;
-    if (activeAlert.condition === 'above' && currentPrice >= activeAlert.price) triggered = true;
-    else if (activeAlert.condition === 'below' && currentPrice <= activeAlert.price) triggered = true;
-    else if (activeAlert.condition === 'equals' && Math.abs(currentPrice - activeAlert.price) < 0.01) triggered = true;
+function checkAlerts(symbol, currentPrice) {
+    if (activeAlerts.length === 0) return;
     
-    if (triggered) {
-        const symbolStr = stockTickerEl.textContent;
-        const msg = `🎯 TARGET HIT: ${symbolStr} is now ${formatStockCurrency(currentPrice, activeAlert.currency || 'INR')}`;
+    // Find all matching alerts for this symbol
+    const matchingAlerts = activeAlerts.filter(a => a.symbol.toUpperCase() === symbol.toUpperCase());
+    if (matchingAlerts.length === 0) return;
+    
+    const triggeredIds = [];
+    
+    matchingAlerts.forEach(alert => {
+        let triggered = false;
+        if (alert.condition === 'above' && currentPrice >= alert.price) triggered = true;
+        else if (alert.condition === 'below' && currentPrice <= alert.price) triggered = true;
+        else if (alert.condition === 'equals' && Math.abs(currentPrice - alert.price) < 0.01) triggered = true;
         
-        // App Notification Toast
-        showToast(msg, 'alert');
-        
-        // System Native Notification
-        if (window.Notification && Notification.permission === "granted") {
-            try {
-                new Notification("Bull Trend AI Price Alert", {
-                    body: msg,
-                    icon: "logo.png"
-                });
-            } catch (e) {
-                console.error("Failed to trigger system notification:", e);
+        if (triggered) {
+            triggeredIds.push(alert.id);
+            const symbolStr = alert.symbol.replace('.NS', '').replace('.BO', '');
+            const msg = `🎯 TARGET HIT: ${symbolStr} is now ${formatStockCurrency(currentPrice, alert.currency || 'INR')}`;
+            
+            // Add to history
+            if (typeof addAlertHistoryRecord === 'function') {
+                addAlertHistoryRecord(alert.symbol, currentPrice, alert.condition, alert.price);
             }
-        }
-        
-        // Email Notification Trigger
-        const email = activeAlert.email;
-        console.log(`[Email Gateway] Triggering alert Email to ${email}: "${msg}"`);
-        showToast(`📧 Sending email alert to ${email}...`, 'success');
-        const emailUrl = `/.netlify/functions/stock?action=send_email&to=${encodeURIComponent(email)}&subject=${encodeURIComponent('Bull Trend AI Price Alert')}&message=${encodeURIComponent(msg)}`;
-        fetch(emailUrl)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    if (data.simulated) {
-                        showToast(`📧 Email alert simulated & logged for ${email}!`, 'success');
-                        showToast(`⚠️ Server SMTP is not configured. Real email NOT sent.`, 'warning');
-                    } else {
-                        showToast(`📧 Email alert sent successfully to ${email}!`, 'success');
-                    }
-                } else {
-                    console.error('Email server error:', data.error);
-                    showToast(`⚠️ Email alert failed: ${data.error}`, 'error');
+            
+            // App Notification Toast
+            showToast(msg, 'alert');
+            
+            // System Native Notification
+            if (window.Notification && Notification.permission === "granted") {
+                try {
+                    new Notification("Bull Trend AI Price Alert", {
+                        body: msg,
+                        icon: "logo.png"
+                    });
+                } catch (e) {
+                    console.error("Failed to trigger system notification:", e);
                 }
-            })
-            .catch(err => {
-                console.error('Failed to trigger email notification:', err);
-                showToast(`📧 Email simulated & logged locally for ${email}.`, 'success');
-                showToast(`⚠️ Server is offline/unreachable. Real email NOT sent.`, 'warning');
-            });
-        
-        try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator(); osc.connect(ctx.destination);
-            osc.frequency.setValueAtTime(880, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime + 0.1);
-            setTimeout(() => {
-                const osc2 = ctx.createOscillator(); osc2.connect(ctx.destination);
-                osc2.frequency.setValueAtTime(1046.50, ctx.currentTime); osc2.start(); osc2.stop(ctx.currentTime + 0.2);
-            }, 150);
-        } catch (e) {}
-        
-        if (typeof addAlertHistoryRecord === 'function') {
-            addAlertHistoryRecord(symbolStr, currentPrice, activeAlert.condition, activeAlert.price);
+            }
+            
+            // Email Notification Trigger
+            const email = alert.email;
+            console.log(`[Email Gateway] Triggering alert Email to ${email}: "${msg}"`);
+            showToast(`📧 Sending email alert to ${email}...`, 'success');
+            const emailUrl = `/.netlify/functions/stock?action=send_email&to=${encodeURIComponent(email)}&subject=${encodeURIComponent('Bull Trend AI Price Alert')}&message=${encodeURIComponent(msg)}`;
+            fetch(emailUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.simulated) {
+                            showToast(`📧 Email alert simulated & logged for ${email}!`, 'success');
+                            showToast(`⚠️ Server SMTP is not configured. Real email NOT sent.`, 'warning');
+                        } else {
+                            showToast(`📧 Email alert sent successfully to ${email}!`, 'success');
+                        }
+                    } else {
+                        console.error('Email server error:', data.error);
+                        showToast(`⚠️ Email alert failed: ${data.error}`, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to trigger email notification:', err);
+                    showToast(`📧 Email simulated & logged locally for ${email}.`, 'success');
+                    showToast(`⚠️ Server is offline/unreachable. Real email NOT sent.`, 'warning');
+                });
+                
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator(); osc.connect(ctx.destination);
+                osc.frequency.setValueAtTime(880, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime + 0.1);
+                setTimeout(() => {
+                    const osc2 = ctx.createOscillator(); osc2.connect(ctx.destination);
+                    osc2.frequency.setValueAtTime(1046.50, ctx.currentTime); osc2.start(); osc2.stop(ctx.currentTime + 0.2);
+                }, 150);
+            } catch (e) {}
         }
-        
-        clearAlert();
+    });
+    
+    if (triggeredIds.length > 0) {
+        // Remove triggered alerts from active list
+        activeAlerts = activeAlerts.filter(a => !triggeredIds.includes(a.id));
+        localStorage.setItem('activeAlerts', JSON.stringify(activeAlerts));
+        renderActiveAlerts();
     }
 }
 
@@ -1091,6 +1195,140 @@ document.addEventListener('click', (e) => {
     if (!symbolInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
         suggestionsBox.classList.add('hidden');
     }
+    if (alertStockSearch && alertStockSuggestions && !alertStockSearch.contains(e.target) && !alertStockSuggestions.contains(e.target)) {
+        alertStockSuggestions.classList.add('hidden');
+    }
+});
+
+let alertSearchTimeout = null;
+
+function renderAlertSuggestions(results) {
+    if (!alertStockSuggestions) return;
+    if (results && results.length > 0) {
+        alertStockSuggestions.innerHTML = '';
+        results.forEach((item) => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            
+            const name = item.name.length > 25 ? item.name.slice(0, 22) + '...' : item.name;
+            const cleanSymbol = item.symbol.replace('.NS', '').replace('.BO', '');
+            
+            div.innerHTML = `
+                <div class="suggestion-name" title="${item.name}">${name}</div>
+                <div class="suggestion-meta">
+                    <span class="suggestion-symbol">${cleanSymbol}</span>
+                    <span style="font-size:0.75rem;opacity:0.8;">(${item.exchange})</span>
+                </div>
+            `;
+            div.addEventListener('click', () => {
+                alertStockSearch.value = '';
+                alertStockSuggestions.classList.add('hidden');
+                fetchAlertStockData(item.symbol);
+            });
+            alertStockSuggestions.appendChild(div);
+        });
+        alertStockSuggestions.classList.remove('hidden');
+    } else {
+        alertStockSuggestions.classList.add('hidden');
+    }
+}
+
+if (alertStockSearch) {
+    alertStockSearch.addEventListener('input', () => {
+        clearTimeout(alertSearchTimeout);
+        const query = alertStockSearch.value.trim().toLowerCase();
+        
+        if (query.length < 1) {
+            alertStockSuggestions.classList.add('hidden');
+            return;
+        }
+        
+        // 1. Get instant matches from our local popular stocks database
+        let localMatches = [];
+        if (query.length === 1) {
+            localMatches = POPULAR_STOCKS.filter(item => 
+                item.symbol.toLowerCase().startsWith(query) || 
+                item.name.toLowerCase().startsWith(query)
+            );
+        } else {
+            const startsWithSymbol = [];
+            const startsWithName = [];
+            const containsMatches = [];
+            
+            POPULAR_STOCKS.forEach(item => {
+                const sym = item.symbol.toLowerCase();
+                const name = item.name.toLowerCase();
+                
+                if (sym.startsWith(query)) {
+                    startsWithSymbol.push(item);
+                } else if (name.startsWith(query) || name.split(' ').some(word => word.startsWith(query))) {
+                    startsWithName.push(item);
+                } else if (sym.includes(query) || name.includes(query)) {
+                    containsMatches.push(item);
+                }
+            });
+            
+            localMatches = [...startsWithSymbol, ...startsWithName, ...containsMatches];
+        }
+        
+        // Render local matches instantly
+        renderAlertSuggestions(localMatches.slice(0, 10));
+        
+        // 2. Fetch from backend API with 350ms debounce
+        alertSearchTimeout = setTimeout(async () => {
+            if (query.length < 1) return;
+            
+            try {
+                let results;
+                if (SEARCH_CACHE[query]) {
+                    results = SEARCH_CACHE[query];
+                } else {
+                    const res = await fetch(`/.netlify/functions/stock?action=search&q=${encodeURIComponent(query)}`);
+                    results = await res.json();
+                    SEARCH_CACHE[query] = results;
+                }
+                
+                // Merge local matches and backend results, removing duplicates
+                const merged = [...localMatches];
+                const seenSymbols = new Set(merged.map(item => item.symbol.toLowerCase()));
+                
+                results.forEach(item => {
+                    const sym = item.symbol.toLowerCase();
+                    const name = item.name.toLowerCase();
+                    
+                    if (query.length === 1) {
+                        const matchesRule = sym.startsWith(query) || 
+                                            name.startsWith(query) || 
+                                            name.split(' ').some(word => word.startsWith(query));
+                        if (!matchesRule) return;
+                    }
+                    
+                    if (!seenSymbols.has(sym)) {
+                        merged.push(item);
+                        seenSymbols.add(sym);
+                    }
+                });
+                
+                renderAlertSuggestions(merged.slice(0, 10));
+            } catch(e) {
+                console.error("Alert suggestions error:", e);
+            }
+        }, 350);
+    });
+}
+
+// Quick Suggestion Chips click handlers
+document.querySelectorAll('.quick-suggestion-chips .chip-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const symbol = e.target.getAttribute('data-symbol');
+        
+        // Highlight active chip
+        document.querySelectorAll('.quick-suggestion-chips .chip-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        
+        fetchAlertStockData(symbol);
+    });
 });
 
 // Listeners
@@ -1110,7 +1348,6 @@ symbolInput.addEventListener('keypress', (e) => {
     }
 });
 setAlertBtn.addEventListener('click', setAlert);
-clearAlertBtn.addEventListener('click', clearAlert);
 runAiBtn.addEventListener('click', runAiPrediction);
 
 // Chart range filtering
@@ -3249,6 +3486,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initial profile display updates
     updateProfileUI();
+
+    // Initial alert system rendering
+    renderActiveAlerts();
+    fetchAlertStockData(currentSymbol);
 });
 
 // --- PROFILE SETTINGS MODAL ENGINE ---
@@ -3545,35 +3786,58 @@ if (watchlist.length === 0) {
 
 async function loadWatchlist() {
     const container = document.getElementById('watchlist-container');
-    if (!container) return;
     
-    if (watchlist.length === 0) {
-        container.innerHTML = `
-            <div class="watchlist-empty-state" style="text-align: center; padding: 24px; color: var(--text-muted);">
-                Your watchlist is empty. Search a stock and click "Track" to add it here.
-            </div>
-        `;
+    const alertSymbols = activeAlerts.map(a => a.symbol);
+    const combinedSymbols = [...new Set([...watchlist, ...alertSymbols])];
+    
+    if (combinedSymbols.length === 0) {
+        if (container) {
+            container.innerHTML = `
+                <div class="watchlist-empty-state" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    Your watchlist is empty. Search a stock and click "Track" to add it here.
+                </div>
+            `;
+        }
         return;
     }
     
     try {
-        const symbolsParam = watchlist.join(',');
+        const symbolsParam = combinedSymbols.join(',');
         const res = await fetch(`/.netlify/functions/stock?action=top10&symbols=${encodeURIComponent(symbolsParam)}`);
         const data = await res.json();
+        
+        // 1. Run checkAlerts for all returned prices
+        data.forEach(item => {
+            checkAlerts(item.symbol, item.price);
+        });
+        
+        // 2. Render watchlist UI
+        if (!container) return;
+        
+        if (watchlist.length === 0) {
+            container.innerHTML = `
+                <div class="watchlist-empty-state" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                    Your watchlist is empty. Search a stock and click "Track" to add it here.
+                </div>
+            `;
+            return;
+        }
+        
+        // Filter data to only show watchlist items in the UI list
+        const watchlistData = data.filter(item => watchlist.includes(item.symbol));
         
         // Preserve open item class if loaded
         const openSymbol = document.querySelector('.watchlist-item.expanded')?.getAttribute('data-symbol') || null;
         
         container.innerHTML = '';
         
-        data.forEach(item => {
+        watchlistData.forEach(item => {
             const symbolBase = item.symbol.replace('.NS', '').replace('.BO', '');
             const isPositive = item.percent_change >= 0;
             const changeClass = isPositive ? 'positive' : 'negative';
             const prefix = isPositive ? '+' : '';
             
             const div = document.createElement('div');
-            // If the item was expanded, keep it expanded
             div.className = `watchlist-item glass-panel${openSymbol === item.symbol ? ' expanded' : ''}`;
             div.setAttribute('data-symbol', item.symbol);
             
@@ -3612,10 +3876,8 @@ async function loadWatchlist() {
             
             // Toggle expanded on click
             div.querySelector('.watchlist-item-header').addEventListener('click', (e) => {
-                // Toggle clicked item
                 const isExpanding = !div.classList.contains('expanded');
                 
-                // Close all others
                 document.querySelectorAll('.watchlist-item').forEach(other => {
                     other.classList.remove('expanded');
                     const otherArrow = other.querySelector('.watchlist-expand-arrow');
@@ -3633,16 +3895,39 @@ async function loadWatchlist() {
             div.querySelector('.btn-details').addEventListener('click', (e) => {
                 e.stopPropagation();
                 currentSymbol = item.symbol;
+                currentChartRange = '2y';
                 fetchStockData(currentSymbol);
+                // Switch view to dashboard
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                const dashboardNav = document.querySelector('[data-target="view-dashboard"]');
+                if (dashboardNav) dashboardNav.classList.add('active');
+                document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+                const dashboardView = document.getElementById('view-dashboard');
+                if (dashboardView) dashboardView.classList.add('active');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
             
             div.querySelector('.btn-alert').addEventListener('click', (e) => {
                 e.stopPropagation();
-                currentSymbol = item.symbol;
-                fetchStockData(currentSymbol);
-                const alertsTab = document.querySelector('[data-target="view-alerts"]');
-                if (alertsTab) alertsTab.click();
+                alertSelectedSymbol = item.symbol;
+                fetchAlertStockData(alertSelectedSymbol);
+                
+                // Highlight corresponding quick suggestion chip if exists
+                document.querySelectorAll('.quick-suggestion-chips .chip-btn').forEach(b => {
+                    if (b.getAttribute('data-symbol') === alertSelectedSymbol) {
+                        b.classList.add('active');
+                    } else {
+                        b.classList.remove('active');
+                    }
+                });
+                
+                // Switch view to alerts
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                const alertsNav = document.querySelector('[data-target="view-alerts"]');
+                if (alertsNav) alertsNav.classList.add('active');
+                document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+                const alertsView = document.getElementById('view-alerts');
+                if (alertsView) alertsView.classList.add('active');
             });
             
             div.querySelector('.btn-remove').addEventListener('click', (e) => {
@@ -3654,11 +3939,13 @@ async function loadWatchlist() {
         });
     } catch (e) {
         console.error("Watchlist fetch error:", e);
-        container.innerHTML = `
-            <div style="text-align: center; padding: 20px; color: var(--danger);">
-                Failed to load watchlist data.
-            </div>
-        `;
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: var(--danger);">
+                    Failed to load watchlist data.
+                </div>
+            `;
+        }
     }
 }
 
